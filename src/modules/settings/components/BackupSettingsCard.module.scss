@@ -1,0 +1,553 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/settings/components/BackupSettingsCard.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Scoped SCSS module for Google Drive Backup Settings & Hierarchy Telemetry.
+ *    - Enforced `max-width: 44rem` centered responsive layout adhering to Specification 01.
+ *    - Botanical color palette folder badges:
+ *      * Morning -> Marigold Amber (#D97706, bg: #FFFBEB)
+ *      * Night   -> Lavender Bloom (#7C3AED, bg: #F5F3FF)
+ *      * Manual  -> Forest Green (#1B4D3E, bg: #ECFDF5)
+ *    - Mobile PWA touch ergonomics (>= 44px touch targets).
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: IMPLEMENT AUTOMATED (MORNING & NIGHT) AND MANUAL DATABASE BACKUP TO GOOGLE DRIVE WITH 3 SUBFOLDERS".
+ *    - Delivers an executive, high-clarity settings interface without visual clutter.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include mobile-only`, `@include tablet-up`).
+ *    - Variables ($color-primary, $color-border, $color-text-main, $color-text-muted).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Styles the hierarchy status, cron badges, manual uploader trigger, and audit table.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.settingsContainer {
+  max-width: 44rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// 1. HEADER CARD
+// ---------------------------------------------------------------------------
+.headerCard {
+  @include card-surface;
+  padding: 0.85rem 1rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border-left: 3.5px solid #1B4D3E;
+}
+
+.headerTitle {
+  font-size: 1.05rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.headerSubtitle {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+// ---------------------------------------------------------------------------
+// 2. DRIVE HIERARCHY STATUS CARD
+// ---------------------------------------------------------------------------
+.sectionCard {
+  @include card-surface;
+  padding: 0.85rem 1rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid $color-border;
+  padding-bottom: 0.45rem;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.connectionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.statusOnline {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.statusOffline {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dotGreen {
+  background-color: #10B981;
+}
+
+.dotAmber {
+  background-color: #F59E0B;
+}
+
+// Subfolder Grid
+.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.folderBox {
+  padding: 0.6rem 0.75rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid #E5E7EB;
+  background-color: #F9FAFB;
+}
+
+.folderBoxMorning {
+  border-color: #FDE68A;
+  background-color: #FFFBEB;
+}
+
+.folderBoxNight {
+  border-color: #DDD6FE;
+  background-color: #F5F3FF;
+}
+
+.folderBoxManual {
+  border-color: #A7F3D0;
+  background-color: #ECFDF5;
+}
+
+.folderHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.folderName {
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.folderPath {
+  font-size: 0.6875rem;
+  color: #6B7280;
+  font-family: monospace;
+}
+
+// ---------------------------------------------------------------------------
+// 3. AUTOMATED CRON SCHEDULES
+// ---------------------------------------------------------------------------
+.schedulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scheduleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+  border-radius: $border-radius-sm;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  gap: 0.5rem;
+}
+
+.scheduleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.scheduleTitle {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  color: #1F2937;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scheduleMeta {
+  font-size: 0.6875rem;
+  color: #6B7280;
+}
+
+// ---------------------------------------------------------------------------
+// 4. MANUAL BACKUP TRIGGER
+// ---------------------------------------------------------------------------
+.manualCard {
+  @include card-surface;
+  padding: 0.85rem 1rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.manualRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.manualDesc {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  flex: 1 1 200px;
+}
+
+.feedbackAlert {
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius-sm;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.feedbackSuccess {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.feedbackError {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+// ---------------------------------------------------------------------------
+// 5. RECENT BACKUP AUDIT TABLE
+// ---------------------------------------------------------------------------
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+
+  th {
+    background-color: #F9FAFB;
+    color: #4B5563;
+    font-weight: $font-weight-semibold;
+    text-align: left;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #E5E7EB;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #F3F4F6;
+    color: #1F2937;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background-color: #F8FAF9;
+  }
+}
+
+.badgeMorning {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badgeNight {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  background-color: #F5F3FF;
+  color: #7C3AED;
+  border: 1px solid #DDD6FE;
+}
+
+.badgeManual {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.driveLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #059669;
+  text-decoration: none;
+  font-weight: $font-weight-semibold;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #D1D5DB;
+  font-size: 0.6875rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #ECFDF5;
+    border-color: #059669;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. DIAGNOSTIC PANEL & INSPECTOR STYLES
+// ---------------------------------------------------------------------------
+.diagnosticContainer {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+  padding: 0.85rem;
+}
+
+.diagnosticHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #F3F4F6;
+  padding-bottom: 0.4rem;
+}
+
+.diagnosticTitle {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-bold;
+  color: #1F2937;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.diagnosticCard {
+  border: 1px solid #F3F4F6;
+  background-color: #FAFAFA;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.diagnosticCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.diagnosticCardTitle {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.diagnosticRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  color: #4B5563;
+  flex-wrap: wrap;
+}
+
+.diagnosticLabel {
+  font-weight: 500;
+  color: #6B7280;
+  min-width: 120px;
+}
+
+.codePill {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background-color: #F3F4F6;
+  color: #1B4D3E;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #E5E7EB;
+  word-break: break-all;
+}
+
+.badgeSuccess {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.badgeWarning {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.badgeDanger {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.statusPill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background-color: #FEE2E2;
+  color: #991B1B;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.reasonPill {
+  font-size: 0.6875rem;
+  font-family: monospace;
+  font-weight: 600;
+  background-color: #F3F4F6;
+  color: #4B5563;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #E5E7EB;
+}
+
+.filesTableContainer {
+  margin-top: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  background-color: #FFFFFF;
+}
+
+.diagnosticFilesTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.6875rem;
+
+  th {
+    background-color: #F9FAFB;
+    color: #4B5563;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #F3F4F6;
+    color: #1F2937;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+

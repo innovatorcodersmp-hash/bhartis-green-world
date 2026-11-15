@@ -1,0 +1,167 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/layout/Header.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented SCSS module styles for the fixed top navigation header.
+ *    - Enlarged the official brand logo display with a generous rounded-card badge (`.logoBadge`, height: 50px, min-width: 72px).
+ *    - Scaled the inner logo image (`.headerLogoImage`) to 44px height (36px on mobile) so the brand emblem and text are crisp and unmistakably legible.
+ *    - Anchored branding to the left viewport edge with fluid edge-to-edge container layout (`max-width: 100%`).
+ *    - Bound container height strictly to $header-height (64px) and background to $color-primary (#1B4D3E).
+ *    - Preserved the WCAG 44px x 44px minimum touch target on the hamburger menu button.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fixes the issue where rectangular brand logos shrunk inside a tiny 46px circular badge were microscopic and unreadable.
+ *    - Ensures the plant emblem and "Bharti's Green World" text within the official logo file are prominently legible at a glance.
+ *    - Maintains consistent design tokens and responsive scaling for mobile PWA touchscreens.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS token variables ($header-height, $color-primary, $color-text-inverse, $border-radius-md, $z-index-header).
+ *    - Responsive media queries and flexbox layout mixins.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Header stays pinned to the top of the viewport (position: fixed; top: 0).
+ *    - `.inner` utilizes full width (`max-width: 100%`) with standard horizontal padding.
+ *    - `.logoBadge` houses the transparent PNG logo on a clean high-contrast white card with subtle depth shadow.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $header-height;
+  background-color: $color-primary;
+  color: $color-text-inverse;
+  z-index: $z-index-header;
+  display: flex;
+  align-items: center;
+  box-shadow: $shadow-sm;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  @include tablet-up {
+    padding: 0 1.5rem;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logoBadge {
+  height: 50px;
+  width: auto;
+  min-width: 72px;
+  border-radius: $border-radius-md;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 3px 8px;
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  @include mobile-only {
+    height: 42px;
+    min-width: 58px;
+    padding: 2px 6px;
+  }
+
+  &:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+  }
+}
+
+.headerLogoImage {
+  height: 44px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+
+  @include mobile-only {
+    height: 36px;
+  }
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  @include mobile-only {
+    font-size: $font-size-sm;
+  }
+}
+
+.brandSubtitle {
+  font-size: $font-size-xs;
+  opacity: 0.88;
+  font-weight: $font-weight-regular;
+
+  @include mobile-only {
+    display: none;
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.menuButton {
+  min-height: $min-touch-target;
+  min-width: $min-touch-target;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius-sm;
+  color: $color-text-inverse;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &:active {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+}

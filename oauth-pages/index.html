@@ -1,0 +1,124 @@
+<!--
+  @author Saniya Patil
+  @project Bharti's Green World ERP (Kolhapur)
+  @file oauth-pages/index.html
+  
+  ----------------------------------------------------------------------------
+  ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+  ----------------------------------------------------------------------------
+  
+  1. WHAT WAS DONE:
+     - Created standalone static home page for "BGW ERP Backup" outside the ERP source tree.
+     - Outlines the internal utility's purpose: backing up Bharti's Green World Nursery's business database
+       to the owner's Google Drive storage.
+     - Provides navigation link to privacy.html.
+  
+  2. WHY IT WAS DONE:
+     - Fulfills user request: "Create a standalone static site in a new folder ./oauth-pages (outside src,
+       not part of the Next.js build) with two files: index.html and privacy.html."
+     - Serves as a standalone, zero-dependency landing page for Google OAuth / API verification.
+  
+  3. WHAT WAS USED:
+     - Pure HTML5 with inline CSS. Zero external scripts or network dependencies.
+  
+  4. HOW IT WORKS:
+     - Statically hosted or reviewed independently to verify the purpose and ownership of BGW ERP Backup.
+  
+  ----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGW ERP Backup - Bharti's Green World Nursery</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #F4F7F5;
+      color: #1F2937;
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .card {
+      background: #FFFFFF;
+      max-width: 560px;
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #E5E7EB;
+      border-top: 5px solid #1B4D3E;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #1B4D3E;
+      background-color: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      margin-bottom: 0.85rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1B4D3E;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 0.9375rem;
+      color: #374151;
+      margin-bottom: 1.25rem;
+    }
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 1.25rem;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+    }
+    a {
+      color: #1B4D3E;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    a:hover {
+      color: #047857;
+    }
+    .contact {
+      font-size: 0.8125rem;
+      color: #6B7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Bharti's Green World • Kolhapur</span>
+    <h1>BGW ERP Backup</h1>
+    <p>
+      <strong>BGW ERP Backup</strong> is an internal tool of <strong>Bharti's Green World Nursery &amp; Landscaping, Kolhapur</strong>.
+      The application automatically backs up the nursery's own business database (plant stock, retail counter bills, vendor records, and landscaping contracts) directly to the nursery owner's Google Drive account for disaster recovery.
+    </p>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy &rarr;</a>
+      <span class="contact">Contact: <a href="mailto:bhartisgreenworld@gmail.com">bhartisgreenworld@gmail.com</a></span>
+    </div>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,252 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/datatable/DataTable.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Refactored `<DataTable>` SCSS module into a compact, modern, and lean table presentation.
+ *    - Reduced toolbar padding to `0.75rem 1rem` and optimized search bar sizing.
+ *    - Reduced header and row cell padding from `0.875rem 1rem` to `0.65rem 0.875rem` for higher data density.
+ *    - Preserved smooth horizontal touch-scrolling (`overflow-x: auto; -webkit-overflow-scrolling: touch`).
+ *    - Retained the mobile swipe helper notification banner (`👈 Swipe horizontally to view full table details 👉`).
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills the UI/UX refactor directive for space-saving, modern design components.
+ *    - Displays more inventory, plant, customer, and vendor records per viewport without excessive scrolling.
+ *    - Preserves mobile responsiveness and ergonomic touch navigation.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include mobile-only`, `@include tablet-up`).
+ *    - Variables ($color-border, $color-primary, $color-primary-light, $font-size-sm, $min-touch-target).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Compact cell dimensions and streamlined toolbar deliver an immediate, scannable data grid.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.tableCard {
+  @include card-surface;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: $border-radius-md;
+  border: 1px solid $color-border;
+}
+
+.toolbar {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.searchBox {
+  width: 100%;
+
+  @include tablet-up {
+    max-width: 320px;
+  }
+}
+
+.swipeHelper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background-color: $color-primary-light;
+  color: $color-primary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-bottom: 1px solid rgba(27, 77, 62, 0.12);
+
+  @include tablet-up {
+    display: none; // Only visible on handheld touch devices
+  }
+}
+
+.scrollContainer {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 600px; // Guarantees columns do not crunch on small screens
+}
+
+.thead {
+  background-color: $color-bg-main;
+  border-bottom: 1px solid $color-border;
+}
+
+.th {
+  padding: 0.65rem 0.875rem;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  user-select: none;
+
+  &.sortable {
+    cursor: pointer;
+
+    &:hover {
+      color: $color-primary;
+      background-color: rgba(27, 77, 62, 0.04);
+    }
+  }
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tbody {
+  tr {
+    border-bottom: 1px solid $color-border;
+    transition: background-color $transition-fast;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #F9FBFA;
+    }
+  }
+}
+
+.td {
+  padding: 0.65rem 0.875rem;
+  font-size: 0.84375rem;
+  color: $color-text-main;
+  vertical-align: middle;
+}
+
+.emptyState {
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  color: $color-text-muted;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: $border-radius-full;
+  background-color: $color-bg-main;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-muted;
+}
+
+.emptyTitle {
+  font-size: 0.9375rem;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+}
+
+.pagination {
+  padding: 0.65rem 1rem;
+  border-top: 1px solid $color-border;
+  background-color: $color-bg-main;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.pageInfo {
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageSizeSelect {
+  height: 32px;
+  min-height: 32px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  padding: 0.15rem 0.5rem;
+  border-radius: $border-radius-sm;
+  border: 1px solid $color-border-dark;
+  background-color: $color-surface;
+  color: $color-text-main;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  @include mobile-only {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.pageBtn {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0.35rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: $border-radius-sm;
+  border: 1px solid #D1D5DB;
+  background-color: $color-surface;
+  color: $color-text-main;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: $color-primary-light;
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

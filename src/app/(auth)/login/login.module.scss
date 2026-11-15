@@ -1,0 +1,29 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/app/(auth)/login/login.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Maintained route-level stylesheet synchronization for the `/login` screen.
+ *    - Configured executive botanical aurora keyframes (`drift1`, `drift2`, `drift3`, `floatParticle`).
+ *    - Declared Glassmorphism tokens (`backdrop-filter: blur(28px)`, `background: rgba(255, 255, 255, 0.88)`).
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills the Executive Animated Botanical Aurora Glass Login Overhaul directive.
+ *    - Provides seamless re-exporting of the master styling for the App Router routing shell.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS design tokens (`@/styles/abstract/variables`, `@/styles/abstract/mixins`).
+ *    - SCSS `@forward` directive.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Re-exports the complete executive aurora glassmorphism rules used by `<LoginForm>`.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@forward '@/modules/auth/components/LoginForm.module.scss';

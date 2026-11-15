@@ -1,0 +1,218 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/Footer.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Re-engineered `<Footer>` into a 100% full-width, edge-to-edge master application footer bar.
+ *    - Enforced compact vertical padding (0.35rem: ~5px) so the footer bar remains sleek
+ *      and does NOT increase in height.
+ *    - Structured the Anvesh brand developer attribution into a high-definition lockup:
+ *      * Icon Mark: `/anvesh-logo.png` rendered with `object-fit: contain` at 44px height (56px on desktop).
+ *      * Live Serif Typography (Playfair Display / Cormorant Garamond):
+ *        - Brand Name: "Anvesh" in deep navy (#0B2A4A), ~18px, font-medium (500).
+ *        - Tagline: "from discovery to creation" in teal (#0F6E7A), ~11px.
+ *      * 8-10px gap between the icon mark and the live text, vertically centered.
+ *      * Wrapped in an interactive anchor link (`.brandLink`).
+ *      * Responsive wrapping for mobile screens to keep footer height balanced.
+ *    - Warm botanical ivory/linen aesthetic (`rgba(244, 239, 230, 0.9)` / `#f4efe6`) with backdrop blur
+ *      and subtle emerald top border (`rgba(27, 58, 43, 0.12)`).
+ *    - Automatically hidden in physical prints (`@media print`).
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "Fix the 'Designed & Developed by' logo in the footer so it is clear and readable.
+ *      Only change the footer branding area; do NOT change anything else."
+ * 
+ * 3. WHAT WAS USED:
+ *    - SCSS design tokens and responsive mixins (`@include tablet-up`).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Placed at the bottom of the `.shell` layout container, spanning the entire browser width edge-to-edge.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&display=swap');
+
+.footer {
+  width: 100%;
+  margin-top: auto;
+  background-color: rgba(244, 239, 230, 0.9); // Warm botanical ivory/linen
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(27, 58, 43, 0.12); // border-emerald-900/10
+  color: #1b3a2b; // Deep forest green-charcoal
+  padding: 0.35rem 1.5rem; // Compact vertical padding: keeps footer sleek without height growth
+  box-shadow: 0 -2px 10px rgba(27, 58, 43, 0.03);
+  transition: all $transition-fast;
+
+  @include tablet-up {
+    padding: 0.35rem 3rem; // md:px-12 py-1.5
+  }
+}
+
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  text-align: center;
+
+  @include tablet-up {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    gap: 1.5rem;
+  }
+}
+
+.copyright {
+  font-weight: 500;
+  color: #1b3a2b;
+  letter-spacing: 0.01em;
+}
+
+.developerAttribution {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  @include tablet-up {
+    flex-wrap: nowrap;
+    gap: 0.85rem;
+  }
+}
+
+.devLabel {
+  font-size: 0.8125rem;
+  color: #3f624f; // Botanical muted green-charcoal
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px; // 8-10px gap between mark and live text
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+  transition: transform $transition-fast, opacity $transition-fast;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 0.92;
+    transform: translateY(-1px);
+
+    .anveshMark,
+    .anveshLogo {
+      filter: drop-shadow(0 3px 8px rgba(212, 162, 76, 0.4));
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0F6E7A;
+    outline-offset: 2px;
+  }
+}
+
+.markWrapper,
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  flex-shrink: 0;
+
+  @include tablet-up {
+    height: 56px;
+  }
+}
+
+.anveshMark,
+.anveshLogo {
+  height: 44px; // 44px height on mobile
+  width: auto;
+  object-fit: contain; // Sharp aspect ratio preservation
+  image-rendering: -webkit-optimize-contrast;
+  filter: drop-shadow(0 1px 3px rgba(11, 42, 74, 0.12));
+  transition: filter $transition-fast;
+
+  @include tablet-up {
+    height: 56px; // 56px height on desktop
+  }
+}
+
+.brandTextGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.brandName {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.125rem; // ~18px
+  font-weight: 500; // font-medium
+  color: #0B2A4A; // Deep navy #0B2A4A
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+.brandTagline {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.6875rem; // ~11px
+  font-style: italic;
+  font-weight: 400;
+  color: #0F6E7A; // Teal #0F6E7A
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  line-height: 1.25;
+  margin-top: 1px;
+}
+
+// Automatically exclude from physical prints
+@media print {
+  .footer {
+    display: none !important;
+  }
+}
+
+// Dark Mode Support
+:global(.dark) .footer,
+[data-theme='dark'] .footer {
+  background-color: rgba(15, 26, 20, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  color: #e5ede8;
+
+  .copyright {
+    color: #e5ede8;
+  }
+
+  .devLabel {
+    color: rgba(229, 237, 232, 0.7);
+  }
+
+  .brandName {
+    color: #93c5fd;
+  }
+
+  .brandTagline {
+    color: #38bdf8;
+  }
+}

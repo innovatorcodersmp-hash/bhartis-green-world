@@ -1,0 +1,121 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/styles/base/_reset.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented global CSS reset, box-sizing normalization, and mobile PWA touch optimizations.
+ *    - Enforced mandatory 16px minimum font size on all input fields, selects, and textareas.
+ *    - Configured touch tap highlight elimination and smooth touch scrolling behavior.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Mobile Safari and Chromium browsers automatically zoom in on web forms if input font sizes
+ *      are below 16px, breaking layout ergonomics for nursery workers in the field.
+ *    - Consistent cross-browser box-sizing ensures accurate dimensional calculations without layout shifts.
+ * 
+ * 3. WHAT WAS USED:
+ *    - CSS resets and box-sizing universal selectors.
+ *    - Standard SASS token variables imported from `../abstract/variables`.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Applies baseline element styles resetting margins, paddings, and borders.
+ *    - Sets font-size: 16px ($font-size-base) across all interactive form controls to guarantee zoom immunity.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+
+// ============================================================================
+// 1. UNIVERSAL BOX-SIZING RESET
+// ============================================================================
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// ============================================================================
+// 2. ROOT & BODY NORMALIZATION
+// ============================================================================
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ============================================================================
+// 3. PWA FORM CONTROLS & AUTO-ZOOM PREVENTION
+// ============================================================================
+// Mobile browsers (iOS Safari / Android Chrome) trigger disruptive auto-zoom
+// if input font-size is below 16px (1rem). This rule strictly prevents auto-zoom.
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: $font-size-base; // Mandatory 16px minimum
+  line-height: inherit;
+  color: inherit;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+input[type="date"],
+select,
+textarea {
+  font-size: $font-size-base !important; // Absolute safeguard against mobile focus zoom
+  border-radius: $border-radius-sm;
+}
+
+// ============================================================================
+// 4. MEDIA & EMBEDDED ELEMENTS
+// ============================================================================
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+// ============================================================================
+// 5. BUTTONS & ACCESSIBLE CLICK TARGETS
+// ============================================================================
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+// ============================================================================
+// 6. LINKS & LISTS
+// ============================================================================
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}

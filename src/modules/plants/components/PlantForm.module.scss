@@ -1,0 +1,146 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/plants/components/PlantForm.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Re-engineered `<PlantForm>` into a compact, width-restrained UI card container (`max-width: 46rem; margin: 0 auto;`).
+ *    - Eliminated unnecessary wide horizontal spacing to deliver a modern, focused catalogue entry card.
+ *    - Structured a high-density 2-row grid:
+ *      * ROW 1: [ Plant Code / SKU ] | [ Botanical Category ]
+ *      * ROW 2: [ Plant Name ] | [ Selling Price ]
+ *    - Integrated the actions bar directly as the footer of the card to eliminate disjointed surfaces.
+ *    - Enforced 44px minimum touch targets and clean monospace formatting for disabled SKU code badges.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: SIMPLIFY PLANT FORM TO SINGLE NAME FIELD AND RESTRAIN UI CARD WIDTH".
+ *    - Fulfills Specification 01: Clean, compact form controls & card max-width standards.
+ *    - Ensures optimal ergonomics on both handheld mobile smartphones and widescreen desktop monitors.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include tablet-up`).
+ *    - Design token variables ($color-primary, $color-border, $border-radius-sm).
+ * 
+ * 4. HOW IT WORKS:
+ *    - The `.formContainer` centers a single `.card` surface with bounded maximum width,
+ *      housing header, 2x2 field grid, and action controls in one cohesive component.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 44rem; // ~704px restrained maximum width (max-w-2xl / max-w-3xl)
+  margin: 0 auto;   // Center horizontally in viewport
+  padding: 0.5rem 0 2rem;
+}
+
+.card {
+  @include card-surface;
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  border-radius: $border-radius-sm;
+  background-color: #ffffff;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @include tablet-up {
+    padding: 1.5rem 1.75rem 1.25rem;
+  }
+}
+
+.header {
+  border-bottom: 1px solid #F3F4F6;
+  padding-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.title {
+  font-size: 0.9375rem; // 15px clean title
+  font-weight: $font-weight-semibold;
+  color: $color-primary; // #1B4D3E
+}
+
+.description {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  line-height: 1.25;
+}
+
+// Clean, tight 2-row grid (2 columns on tablet/desktop, 1 column on mobile)
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+.disabledSkuInput {
+  input:disabled {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-weight: 700;
+    color: #1B4D3E !important;
+    letter-spacing: 0.05em;
+    cursor: default;
+    background-color: transparent;
+  }
+}
+
+.errorBanner {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: $border-radius-sm;
+  padding: 0.5rem 0.75rem;
+  color: $color-danger;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer {
+  border-top: 1px solid #F3F4F6;
+  padding-top: 0.85rem;
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.primaryActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+  }
+}

@@ -1,0 +1,141 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/pos/components/PosTableWrapper.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented SCSS module styles for `<PosTableWrapper>` action buttons and feedback notifications.
+ *    - Structured `.actionBtnGroup` for side-by-side Invoice download and WhatsApp share triggers.
+ *    - Styled `.invoiceBtn` (PDF view/download) and `.whatsAppBtn` (direct WhatsApp Click-to-Chat).
+ *    - Added floating `.toastNotice` for real-time user action confirmation.
+ *    - Enforced 44px mobile touch targets for outdoor cashier ergonomics.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: ADD WHATSAPP INVOICE SEND ACTION TO POS BILLING LIST & CHECKOUT".
+ *    - Replaces inline styles with maintainable SASS tokens and responsive mixins.
+ *    - Matches the Landscaping Contracts estimate table action layout.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS design tokens ($color-primary, $border-radius-sm, $min-touch-target, $shadow-md).
+ *    - Responsive media queries (@include mobile-only).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Scopes styling to row action triggers in the POS bills data table.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.actionBtnGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+
+  @include mobile-only {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.tableActionBtn {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  @include mobile-only {
+    min-height: $min-touch-target;
+    padding: 0.5rem 0.75rem;
+    font-size: $font-size-sm;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.invoiceBtn {
+  background-color: #F0FDF4;
+  color: #166534;
+  border-color: #BBF7D0;
+
+  &:hover {
+    background-color: #DCFCE7;
+    border-color: #86EFAC;
+    color: #14532D;
+  }
+}
+
+.whatsAppBtn {
+  background-color: #ECFDF5;
+  color: #047857;
+  border-color: #A7F3D0;
+
+  &:hover {
+    background-color: #D1FAE5;
+    border-color: #6EE7B7;
+    color: #065F46;
+  }
+}
+
+.billNumberLink {
+  font-family: monospace;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+.toastNotice {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: #ECFDF5;
+  border: 1px solid #10B981;
+  border-radius: $border-radius-sm;
+  padding: 0.75rem 1rem;
+  color: #065F46;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: $shadow-md;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

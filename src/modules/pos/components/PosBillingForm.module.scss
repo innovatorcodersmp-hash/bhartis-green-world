@@ -1,0 +1,440 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/pos/components/PosBillingForm.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Re-engineered `<PosBillingForm>` into an ultra-compact cashier counter layout (`max-width: 56rem; margin: 0 auto;`).
+ *    - Moved "Scan QR / Barcode" and "+ Add Plant Item" action buttons inline directly into the header bar of Section 2 (`.headerActions`),
+ *      eliminating the bulky full-width button row above the botanical items table.
+ *    - Tightened payment mode pills and dynamic input fields into a single streamlined row (`.paymentStreamlinedRow`, `.hasUpi`).
+ *    - Streamlined the financial checkout totals panel (`.summaryPanel`) into a sleek horizontal ribbon with key-value metrics.
+ *    - Reduced card padding, margins, line-heights, and vertical gaps across all sections (Invoice Identity, Purchased Items, Settlement, Footer).
+ *    - Preserved `.disabledInvoiceInput` monospace styling for auto-generated `BGW-INV-YYYY-XXXX` codes.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: ULTRA-COMPACT POS CASHIER SCREEN & BUTTON ALIGNMENT".
+ *    - Fulfills Specification 01: Clean, compact card UI standards, restrained max-width, & cashier viewport ergonomics.
+ *    - Eliminates vertical scrolling fatigue on standard 1080p desktop monitors, allowing cashiers to view the entire invoice,
+ *      items table, payment controls, and checkout totals without scrolling.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include tablet-up`).
+ *    - Design token variables ($color-primary, $color-border, $color-danger, $border-radius-sm).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Positions section title and action triggers on the same horizontal plane in `.sectionHeader`;
+ *      dynamically switches `.paymentStreamlinedRow` to 2 or 3 columns based on selected payment mode;
+ *      renders real-time financial metrics in a horizontal ribbon; and restrains the entire layout to 56rem centered.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 56rem; // ~896px restrained cashier container
+  margin: 0 auto;
+  padding: 0.15rem 0 1rem;
+}
+
+.sectionCard {
+  @include card-surface;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border-radius: $border-radius-sm;
+  background-color: #ffffff;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin: 0;
+
+  @include tablet-up {
+    padding: 0.55rem 0.85rem;
+    gap: 0.4rem;
+  }
+}
+
+.sectionHeader {
+  border-bottom: 1px solid #F3F4F6;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.headerTextGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sectionTitle {
+  font-size: 0.8125rem; // 13px clean heading
+  font-weight: $font-weight-semibold;
+  color: $color-primary; // #1B4D3E
+  margin: 0;
+}
+
+.itemCountBadge {
+  font-size: 0.6875rem;
+  background-color: #ECFDF5;
+  color: $color-primary;
+  padding: 0.05rem 0.4rem;
+  border-radius: 9999px;
+  font-weight: $font-weight-medium;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+
+  button {
+    min-height: 32px;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.75rem;
+  }
+}
+
+// Adaptive Field Layouts
+.singleColumn {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+    align-items: start;
+  }
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.65rem;
+    align-items: start;
+  }
+}
+
+.disabledInvoiceInput {
+  input:disabled {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-weight: 700;
+    color: #1B4D3E !important;
+    letter-spacing: 0.05em;
+    cursor: default;
+    background-color: transparent;
+  }
+}
+
+// Line Items Container & Table-like Rows
+.itemsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.05rem;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+  align-items: center;
+
+  @include tablet-up {
+    grid-template-columns: 3.5fr 1fr 1fr 1fr auto;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.itemTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-semibold;
+  color: #111827;
+
+  @include tablet-up {
+    align-items: flex-end;
+  }
+
+  small {
+    font-size: 0.625rem;
+    font-weight: 400;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
+
+.deleteItemBtn {
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: $color-danger;
+    background-color: #FEE2E2;
+  }
+}
+
+.emptyItemsBox {
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  background-color: #F9FAFB;
+  border: 1px dashed #D1D5DB;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+// Streamlined Payment Controls Row
+.paymentStreamlinedRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  align-items: start;
+
+  @include tablet-up {
+    grid-template-columns: 1.3fr 1fr;
+    gap: 0.65rem;
+
+    &.hasUpi {
+      grid-template-columns: 1.3fr 1.1fr 1fr;
+    }
+  }
+}
+
+.paymentModeCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.upiRefCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.amountPaidCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  color: #4B5563;
+  display: block;
+  margin-bottom: 0.15rem;
+  line-height: 1.2;
+}
+
+// Payment Mode Radio Pills
+.paymentModesGroup {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+}
+
+.paymentModeOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.4rem;
+  min-height: 36px;
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  border: 1px solid #D1D5DB;
+  border-radius: $border-radius-sm;
+  background-color: $color-surface;
+  cursor: pointer;
+  transition: all $transition-fast;
+  color: #374151;
+
+  &.active {
+    border-color: $color-primary;
+    background-color: #ECFDF5;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 0 0 1px $color-primary;
+  }
+}
+
+// Udhar credit notice callout
+.udharNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  background-color: #FEF3C7; // amber-100
+  border: 1px solid #FCD34D; // amber-300
+  border-radius: $border-radius-sm;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.6875rem;
+  color: #92400E;
+  line-height: 1.25;
+}
+
+// Sleek Horizontal Financial Summary Ribbon
+.summaryPanel {
+  background-color: #F9FBFA;
+  border: 1px solid rgba(27, 77, 62, 0.15);
+  border-radius: $border-radius-sm;
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #4B5563;
+
+  .summaryLabel {
+    color: #6B7280;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .summaryValue {
+    font-weight: $font-weight-semibold;
+    color: #111827;
+  }
+
+  &.grandTotal .summaryValue {
+    font-size: 0.875rem;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+  }
+
+  &.dueBalance .summaryValue {
+    font-weight: $font-weight-bold;
+    color: #DC2626;
+  }
+}
+
+.errorBanner {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: $border-radius-sm;
+  padding: 0.4rem 0.75rem;
+  color: $color-danger;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scanToast {
+  background-color: #ECFDF5;
+  border: 1px solid #10B981;
+  border-radius: $border-radius-sm;
+  padding: 0.35rem 0.75rem;
+  color: #065F46;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: $shadow-sm;
+}
+
+.actionsBar {
+  @include card-surface;
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.05rem;
+  border-radius: $border-radius-sm;
+  border: 1px solid #E5E7EB;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.footerCheckoutTotal {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #1B4D3E;
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.primaryButtonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+  }
+
+  button {
+    min-height: 36px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+}

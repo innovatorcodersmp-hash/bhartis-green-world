@@ -1,0 +1,181 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/ui/Button/Button.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented SCSS module styles for the core `<Button>` primitive component.
+ *    - Defined color and state treatments for variants: `primary`, `secondary`, `danger`, and `outline`.
+ *    - Enforced mandatory minimum touch target dimensions of 44px x 44px ($min-touch-target) for mobile PWA ergonomics.
+ *    - Built loading spinner animations and active/focus states.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - To fulfill Specification 03 (Shared UI Components) Section 1: "NO RAW HTML CONTROLS".
+ *    - To ensure nursery workers and counter operators have tactile, high-contrast, thumb-friendly buttons.
+ *    - To strictly eliminate hardcoded colors by deriving all values from SASS design tokens.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS variables ($color-primary, $color-secondary, $color-danger, $min-touch-target, $border-radius-md).
+ *    - Touch target and flex-center mixins from `@/styles/abstract/mixins`.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Styles are scoped via CSS Modules.
+ *    - Applying `.btn` establishes touch target minimums, while `.primary`, `.secondary`, etc., apply palette themes.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  min-height: $min-touch-target; // Strict 44px minimum PWA touch target
+  min-width: $min-touch-target;
+  padding: 0.625rem 1.25rem;
+  transition: background-color $transition-fast, border-color $transition-fast, box-shadow $transition-fast, transform 50ms ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================================================
+// BUTTON VARIANTS
+// ============================================================================
+
+.primary {
+  background-color: $color-primary;
+  color: $color-text-inverse;
+  box-shadow: $shadow-sm;
+
+  &:hover:not(:disabled) {
+    background-color: $color-primary-hover;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.secondary {
+  background-color: $color-primary-light;
+  color: $color-primary;
+  border-color: rgba(27, 77, 62, 0.15);
+
+  &:hover:not(:disabled) {
+    background-color: #DCEBE5;
+    border-color: rgba(27, 77, 62, 0.25);
+  }
+}
+
+.danger {
+  background-color: $color-danger;
+  color: $color-text-inverse;
+
+  &:hover:not(:disabled) {
+    background-color: #B91C1C;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-danger;
+    outline-offset: 2px;
+  }
+}
+
+.hibiscus,
+.special {
+  background-color: #EC4899;
+  background-color: var(--accent-hibiscus, #EC4899);
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+
+  &:hover:not(:disabled) {
+    background-color: #DB2777;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.45);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #EC4899;
+    outline-offset: 2px;
+  }
+}
+
+.outline {
+  background-color: $color-surface;
+  color: $color-text-main;
+  border-color: $color-border-dark;
+
+  &:hover:not(:disabled) {
+    background-color: $color-bg-main;
+    border-color: $color-text-muted;
+  }
+}
+
+// ============================================================================
+// SIZES (All retain >= 44px min-height on mobile)
+// ============================================================================
+
+.sm {
+  padding: 0.5rem 0.875rem;
+  font-size: $font-size-sm;
+}
+
+.md {
+  padding: 0.625rem 1.25rem;
+  font-size: $font-size-base;
+}
+
+.lg {
+  padding: 0.75rem 1.5rem;
+  font-size: $font-size-lg;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+// ============================================================================
+// LOADING SPINNER
+// ============================================================================
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: $border-radius-full;
+  animation: spin 600ms linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

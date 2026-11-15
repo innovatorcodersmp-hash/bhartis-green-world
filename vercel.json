@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/backup?slot=morning",
+      "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/backup?slot=night",
+      "schedule": "0 16 * * *"
+    }
+  ]
+}
+

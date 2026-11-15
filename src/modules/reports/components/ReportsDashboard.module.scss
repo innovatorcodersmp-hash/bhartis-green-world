@@ -1,0 +1,434 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/reports/components/ReportsDashboard.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented high-density responsive styles for `<ReportsDashboard>`.
+ *    - Structured 5 practical category tab navigation pills with forest green active states.
+ *    - Styled Date Range Filter bar (Today, This Week, This Month, All Time) with dynamic badges.
+ *    - Implemented dynamic KPI metrics cards with botanical green accents.
+ *    - Configured print media stylesheet (`@media print`) for clean A4 physical printing.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: REDESIGN REPORTS DASHBOARD WITH PRACTICAL NURSERY CATEGORIES, DATE FILTERS, AND CLEAN PDF EXPORT".
+ *    - Fulfills Specification 01: Clean UI, compact cards, botanical accent colors, >= 44px touch targets.
+ *    - Eliminates cluttered raw data dumps with focused, practical nursery tabs.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include tablet-up`, `@include mobile-only`).
+ *    - Variables ($color-primary, $color-primary-light, $color-border, $color-text-main, $border-radius-sm).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Scoped SCSS module classes styling tabs, date filters, summary KPIs, tables, and print templates.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// 1. TOP TOOLBAR & CONTROLS
+// ---------------------------------------------------------------------------
+.topToolbar {
+  @include card-surface;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  border-radius: $border-radius-sm;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mainTitle {
+  font-size: 0.9375rem;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.subTitle {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  @include mobile-only {
+    width: 100%;
+
+    &>* {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 2. 5 PRACTICAL CATEGORY TABS
+// ---------------------------------------------------------------------------
+.categoryTabsBar {
+  @include card-surface;
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  border-radius: $border-radius-sm;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.categoryTabBtn {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  color: $color-text-muted;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: $color-primary;
+    background-color: rgba($color-primary, 0.05);
+  }
+
+  &.activeCategoryTab {
+    color: #ffffff;
+    background-color: $color-primary;
+    font-weight: $font-weight-semibold;
+    border-color: $color-primary;
+    box-shadow: 0 1px 3px rgba(27, 77, 62, 0.2);
+
+    .tabBadge {
+      background-color: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+  }
+}
+
+.tabBadge {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-bold;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background-color: $color-primary-light;
+  color: $color-primary;
+  transition: all 0.15s ease;
+}
+
+// ---------------------------------------------------------------------------
+// 3. DATE RANGE FILTER BAR
+// ---------------------------------------------------------------------------
+.dateFilterCard {
+  @include card-surface;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-radius: $border-radius-sm;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dateFilterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 0.3rem;
+}
+
+.datePillBtn {
+  min-height: 32px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  color: #4B5563;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #F3F4F6;
+    color: $color-primary;
+    border-color: #D1D5DB;
+  }
+
+  &.activeDatePill {
+    background-color: #ECFDF5;
+    color: #047857;
+    border-color: #A7F3D0;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.dateStatusBadge {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+// ---------------------------------------------------------------------------
+// 4. SUMMARY KPI CARDS
+// ---------------------------------------------------------------------------
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.kpiCard {
+  @include card-surface;
+  padding: 0.65rem 0.85rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border-left: 3.5px solid #10B981;
+
+  &:nth-child(5n + 1) {
+    border-left-color: #10B981; // Green
+  }
+
+  &:nth-child(5n + 2) {
+    border-left-color: var(--accent-hibiscus, #EC4899); // Hibiscus
+  }
+
+  &:nth-child(5n + 3) {
+    border-left-color: var(--accent-marigold, #F59E0B); // Marigold
+  }
+
+  &:nth-child(5n + 4) {
+    border-left-color: var(--accent-lavender, #A78BFA); // Lavender
+  }
+
+  &:nth-child(5n + 5) {
+    border-left-color: var(--accent-sky, #38BDF8); // Sky
+  }
+}
+
+.kpiLabel {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-medium;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.kpiValue {
+  font-size: 1.15rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.2;
+}
+
+.kpiNote {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+// ---------------------------------------------------------------------------
+// 5. TABLE WRAPPER & STYLING
+// ---------------------------------------------------------------------------
+.tableCard {
+  @include card-surface;
+  padding: 0.75rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.tableHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid $color-border;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.tableTitle {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.tableCountTag {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-medium;
+  color: $color-text-muted;
+  background-color: #F3F4F6;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+}
+
+// Badges
+.badgeDefault {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+}
+
+.badgeSuccess {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.badgeWarning {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badgeDanger {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.badgeInfo {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.badgeNeutral {
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+// ---------------------------------------------------------------------------
+// 6. PRINT ONLY CONTAINER (HIDDEN ON SCREEN)
+// ---------------------------------------------------------------------------
+.printHeader {
+  display: none;
+}
+
+// ---------------------------------------------------------------------------
+// 7. PRINT MEDIA STYLES (@media print)
+// ---------------------------------------------------------------------------
+@media print {
+  @page {
+    margin: 1cm;
+    size: landscape;
+  }
+
+  :global(body) {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .topToolbar,
+  .categoryTabsBar,
+  .dateFilterCard,
+  .toolbarActions {
+    display: none !important;
+  }
+
+  .printHeader {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #1B4D3E;
+  }
+
+  .printOrgName {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #1B4D3E;
+    text-transform: uppercase;
+  }
+
+  .printDocTitle {
+    font-size: 0.875rem;
+    color: #374151;
+    font-weight: 600;
+  }
+
+  .printTimestamp {
+    font-size: 0.75rem;
+    color: #6B7280;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    margin-bottom: 1rem;
+  }
+
+  .tableCard {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .dashboardContainer :global(table tr) {
+    page-break-inside: avoid;
+  }
+}

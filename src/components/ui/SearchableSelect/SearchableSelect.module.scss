@@ -1,0 +1,267 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/ui/SearchableSelect/SearchableSelect.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented enterprise minimalist underline trigger styles for `<SearchableSelect>`.
+ *    - Replaced heavy boxed border with clean baseline styling (`border: none; border-bottom: 1.5px solid #D1D5DB;`).
+ *    - Maintained transparent background, zero border radius, and compact 32px height to match `<Input>`.
+ *    - Preserved 16px minimum font size on trigger to strictly prevent mobile viewport zoom.
+ *    - Maintained a clean, shadow-elevated floating suggestions dropdown popup with smooth hover feedback.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills the enterprise minimalist UI refactor directive for modern, high-density ERP ergonomics.
+ *    - Creates visual consistency between text inputs and dropdown selections across all modules.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS variables ($font-size-base, $color-primary, $color-border, $color-text-main).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Sleek underline trigger seamlessly matches input fields and toggles an elevated options list upon activation.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem; // Clean, compact label-to-baseline gap
+  width: 100%;
+}
+
+.labelWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 0.75rem; // 12px compact crisp label
+  font-weight: $font-weight-medium;
+  color: #4B5563;
+  line-height: 1.2;
+}
+
+.requiredStar {
+  color: $color-danger;
+  margin-left: 0.2rem;
+  font-weight: $font-weight-bold;
+}
+
+.trigger {
+  width: 100%;
+  height: 32px; // Sleek 32px slim baseline matching Input
+  min-height: 32px;
+  font-size: $font-size-base !important; // Strict 16px font prevents auto-zoom
+  font-family: inherit;
+  color: $color-text-main;
+  background-color: transparent; // Clean transparent baseline
+  border: none;
+  border-bottom: 1.5px solid #D1D5DB;
+  border-radius: 0;
+  padding: 0.25rem 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.3;
+  transition: border-bottom-color $transition-fast, border-bottom-width $transition-fast;
+
+  &:hover:not(:disabled):not(.open) {
+    border-bottom-color: #9CA3AF;
+  }
+
+  &:focus-visible,
+  &.open {
+    outline: none;
+    border-bottom: 2px solid $color-primary;
+    margin-bottom: -0.5px; // Stabilizes vertical layout without jumping
+  }
+
+  &.disabled {
+    background-color: transparent;
+    color: #9CA3AF;
+    border-bottom-style: dashed;
+    cursor: not-allowed;
+  }
+
+  &.hasError {
+    border-bottom-color: $color-danger;
+
+    &:focus-visible,
+    &.open {
+      border-bottom: 2px solid $color-danger;
+    }
+  }
+}
+
+.triggerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: $color-text-main;
+}
+
+.placeholder {
+  color: #9CA3AF;
+  font-size: 0.8125rem;
+}
+
+.triggerIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #6B7280;
+  flex-shrink: 0;
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  padding: 0.1rem;
+  color: #9CA3AF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: #374151;
+    background-color: #F3F4F6;
+  }
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dropdownFadeIn 100ms ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.35rem;
+  border-bottom: 1px solid #F3F4F6;
+  background-color: #F9FAFB;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.65rem;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 28px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  padding: 0.15rem 0.4rem 0.15rem 1.65rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  color: $color-text-main;
+  transition: border-color $transition-fast;
+
+  &::placeholder {
+    color: #9CA3AF;
+    font-size: 0.75rem;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba(27, 77, 62, 0.1);
+  }
+}
+
+.optionsList {
+  max-height: 180px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.optionItem {
+  min-height: 28px;
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: #1F2937;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 0;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: #F3F4F6;
+    color: #111827;
+  }
+
+  &.selected {
+    background-color: #ECFDF5;
+    color: #047857;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.noOptions {
+  padding: 0.875rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.errorMessage {
+  font-size: 0.6875rem;
+  color: $color-danger;
+  font-weight: $font-weight-medium;
+  line-height: 1.15;
+  margin-top: 0.05rem;
+}

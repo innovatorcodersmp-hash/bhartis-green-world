@@ -1,0 +1,216 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/ui/MetricCard/MetricCard.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented ultra-compact, low-profile styles for `<MetricCard>`.
+ *    - Styled botanical flower chromatic variants: `rose` (coral), `marigold` (amber), `lavender` (violet), and `cornflower` (blue).
+ *    - Softened default badge background to clean neutral `#F3F4F6` with deep slate icon `#4B5563` to eliminate green monochrome fatigue.
+ *    - Reduced container padding to `0.5rem 0.75rem` and minimized vertical gap to `0.2rem`.
+ *    - Shrunk counter value typography to `18px` (`1.125rem`) for sleek, low-profile visibility.
+ *    - Downscaled icon badges to `26px x 26px` with 14px SVG icons and 4px rounded corners.
+ *    - Reduced card height to an absolute minimum so data tables sit immediately near the top of the viewport.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: INTRODUCE BOTANICAL FLOWER ACCENT COLORS ACROSS ERP MODULES".
+ *    - Removes excessive green monochrome oversaturation across KPI summary bars.
+ *    - Distinguishes critical alerts, pending dues, liquid collections, and asset valuations at a glance.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`).
+ *    - Botanical tokens ($color-rose, $color-marigold, $color-lavender, $color-cornflower, $color-success).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Compact flex container aligns 12px label, 26px badge, 18px value, and micro trend indicators into an ultra-lean footprint.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.card {
+  @include card-surface;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.2rem;
+  width: 100%;
+  border-radius: $border-radius-sm;
+  border: 1px solid $color-border;
+  background-color: $color-surface;
+  border-left: 3.5px solid #10B981; // Thin left botanical accent border
+  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+  &.default,
+  &.success {
+    border-left-color: #10B981;
+  }
+
+  &.warning,
+  &.marigold {
+    border-left-color: var(--accent-marigold, #F59E0B);
+  }
+
+  &.danger,
+  &.rose,
+  &.coral {
+    border-left-color: var(--accent-coral, #FB7185);
+  }
+
+  &.lavender {
+    border-left-color: var(--accent-lavender, #A78BFA);
+  }
+
+  &.cornflower,
+  &.sky {
+    border-left-color: var(--accent-sky, #38BDF8);
+  }
+
+  &.hibiscus {
+    border-left-color: var(--accent-hibiscus, #EC4899);
+  }
+
+  &.sunflower {
+    border-left-color: var(--accent-sunflower, #FACC15);
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-color: rgba(27, 77, 62, 0.2);
+  }
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.label {
+  font-size: 0.75rem; // 12px clean muted label
+  color: $color-text-muted;
+  font-weight: $font-weight-medium;
+  line-height: 1.15;
+}
+
+.iconBadge {
+  width: 26px; // Ultra-compact 26px icon badge
+  height: 26px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.default {
+    background-color: #F3F4F6;
+    color: #4B5563;
+  }
+
+  &.success {
+    background-color: #ECFDF5;
+    color: $color-success;
+  }
+
+  &.warning,
+  &.marigold {
+    background-color: $color-marigold-light;
+    color: $color-marigold;
+  }
+
+  &.danger,
+  &.rose,
+  &.coral {
+    background-color: rgba(251, 113, 133, 0.12);
+    color: var(--accent-coral, #FB7185);
+  }
+
+  &.lavender {
+    background-color: $color-lavender-light;
+    color: $color-lavender;
+  }
+
+  &.cornflower,
+  &.sky {
+    background-color: rgba(56, 189, 248, 0.12);
+    color: var(--accent-sky, #38BDF8);
+  }
+
+  &.hibiscus {
+    background-color: rgba(236, 72, 153, 0.12);
+    color: var(--accent-hibiscus, #EC4899);
+  }
+
+  &.sunflower {
+    background-color: rgba(250, 204, 21, 0.15);
+    color: #CA8A04;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.value {
+  font-size: 1.125rem; // 18px slim counter value
+  font-weight: $font-weight-bold;
+  color: #111827;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.footerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  margin-top: 0.05rem;
+}
+
+.trendBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-weight: $font-weight-semibold;
+  font-size: 0.625rem;
+  padding: 0.05rem 0.25rem;
+  border-radius: $border-radius-full;
+
+  &.positive {
+    background-color: #ECFDF5;
+    color: $color-success;
+  }
+
+  &.negative {
+    background-color: #FEF2F2;
+    color: $color-danger;
+  }
+
+  &.neutral {
+    background-color: $color-bg-main;
+    color: $color-text-muted;
+  }
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.description {
+  color: $color-text-muted;
+  font-size: 0.6875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

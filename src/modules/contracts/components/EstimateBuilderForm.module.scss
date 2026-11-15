@@ -1,0 +1,349 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/contracts/components/EstimateBuilderForm.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Re-architected SCSS styles for `<EstimateBuilderForm>` with streamlined client layout
+ *      and full-width in-table plant combobox styling.
+ *    - Added `.lockedDirectoryPill` to visually represent auto-locked directory client data.
+ *    - Streamlined `.tableInput` for clean, single searchable Plant Master datalist selection.
+ *    - Removed redundant dual-dropdown classes (`.rowComboboxWrapper`, `.rowPickerDropdown`).
+ *    - Maintained high-density card padding, compact grid spacing, and 44px minimum touch targets.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "why we show this is this 2 time shown needed".
+ *    - Eliminates redundant side-by-side dropdown buttons and gives full width to the searchable plant input.
+ * 
+ * 3. WHAT WAS USED:
+ *    - Design tokens from `_variables.scss` (`$color-primary`, `$border-radius-sm`, `$min-touch-target`).
+ *    - SASS mixins (`@include tablet-up`).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Positions the combobox input and inline quick picker seamlessly inside each table row.
+ *    - High-density CSS grid rules adapt dynamically across mobile and desktop displays.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.formWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  max-width: 960px;
+  margin: 0 auto;
+  padding-bottom: $bottom-nav-clearance;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: $border-radius-sm;
+  color: #DC2626;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+}
+
+.sectionCard {
+  background-color: #FFFFFF;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  padding: 0.875rem 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @include tablet-up {
+    padding: 0.875rem 1.125rem;
+  }
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.15rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  .headerTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 0.9375rem;
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .sectionSubtitle {
+    font-size: 0.71875rem;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.2;
+  }
+}
+
+.iconBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #E8F2EE;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lockedDirectoryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.625rem;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 9999px;
+  font-size: 0.71875rem;
+  font-weight: $font-weight-medium;
+  color: #047857;
+}
+
+.directorySelectWrapper {
+  padding-bottom: 0.25rem;
+  border-bottom: 1px dashed #E5E7EB;
+}
+
+.gridTwoCol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gridThreeCol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Compact Items Table with Embedded Row Combobox
+.tableScrollWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+  font-size: 0.8125rem;
+
+  th {
+    background-color: #F8FAFC;
+    color: #475569;
+    font-weight: $font-weight-semibold;
+    padding: 0.45rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #E2E8F0;
+    font-size: 0.71875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  td {
+    padding: 0.35rem 0.45rem;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: middle;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.emptyTableState {
+  text-align: center;
+  padding: 1.25rem 1rem !important;
+  color: #64748B;
+  font-size: 0.8125rem;
+  font-style: italic;
+  background-color: #FAFAFA;
+}
+
+// In-table row combobox
+.tableInput {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.8125rem;
+  color: #0F172A;
+  outline: none;
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+}
+
+// Read-only botanical category badges (immutable master classification)
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.725rem;
+  font-weight: $font-weight-bold;
+  border-radius: 9999px;
+  white-space: nowrap;
+  letter-spacing: 0.015em;
+  user-select: none;
+}
+
+.badgeFruit {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #B45309; // Marigold
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badgeFlower {
+  background-color: rgba(236, 72, 153, 0.12);
+  color: #BE185D; // Hibiscus
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+.badgeOrnamental {
+  background-color: rgba(167, 139, 250, 0.12);
+  color: #6D28D9; // Lavender (Indoor/Ornamental)
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+
+.badgeMedicinal {
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #0369A1; // Sky (Herbs/Medicinal)
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.badgeDefault {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #047857; // Green
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.deleteRowBtn {
+  min-width: 38px;
+  min-height: 38px;
+  background-color: transparent;
+  border: none;
+  color: #EF4444;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #FEE2E2;
+  }
+}
+
+.tableFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.25rem;
+}
+
+.itemCountBadge {
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  color: #64748B;
+}
+
+// Financial Settlement Summary Container
+.summaryContainer {
+  background-color: #FAFBF9;
+  border: 1px solid #CBD5E1;
+  border-radius: $border-radius-sm;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 380px;
+  margin-left: auto;
+  width: 100%;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78125rem;
+  color: #4B5563;
+}
+
+.summaryValue {
+  font-weight: $font-weight-medium;
+  color: #111827;
+}
+
+.grandTotalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1.5px solid #1B4D3E;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.grandTotalLabel {
+  font-size: 0.875rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.grandTotalValue {
+  font-size: 1.0625rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+// Bottom Action Controls
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}

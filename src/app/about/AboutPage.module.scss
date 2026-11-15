@@ -1,0 +1,226 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/app/about/AboutPage.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Designed scoped SCSS module for the public Nursery Homepage & About view (`/about` & `/`).
+ *    - Followed Specification 01: Botanical flower color palette, compact card UI, max-width 44rem centered.
+ *    - Styled nursery facility banners, capability pillars, cloud infrastructure summary, and action links.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "Also make sure the site root (/) or a public /about page works as a homepage
+ *      without login. Keep the existing design."
+ *    - Provides a warm, professional, brand-aligned public landing for customers, Google reviewers, and guests.
+ * 
+ * 3. WHAT WAS USED:
+ *    - Centralized SASS design tokens (`@/styles/abstract/variables`, `@/styles/abstract/mixins`).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Renders an inviting botanical card hierarchy with touch-safe buttons and clear navigation.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.container {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.heroCard {
+  @include card-surface;
+  padding: 1.5rem 1.25rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  border-left: 4px solid #1B4D3E;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F9FAF9 100%);
+}
+
+.brandBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1B4D3E;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.heroTitle {
+  font-size: 1.35rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.25;
+}
+
+.heroSubtitle {
+  font-size: 0.875rem;
+  color: #4B5563;
+  line-height: 1.5;
+}
+
+.card {
+  @include card-surface;
+  padding: 1.15rem 1.25rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9375rem;
+  font-weight: $font-weight-semibold;
+  color: #1F2937;
+  border-bottom: 1px solid $color-border;
+  padding-bottom: 0.45rem;
+}
+
+.paragraph {
+  font-size: 0.8125rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featureBox {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.featureBoxGreen {
+  background-color: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.featureBoxAmber {
+  background-color: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.featureBoxPurple {
+  background-color: #F5F3FF;
+  border-color: #DDD6FE;
+}
+
+.featureHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.featureDesc {
+  font-size: 0.75rem;
+  color: #4B5563;
+  line-height: 1.45;
+}
+
+.contactBox {
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: $border-radius-sm;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.contactRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  color: #92400E;
+}
+
+.emailLink {
+  font-weight: 700;
+  color: #1B4D3E;
+  text-decoration: underline;
+
+  &:hover {
+    color: #047857;
+  }
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1B4D3E;
+  text-decoration: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid $color-border;
+  background-color: #FFFFFF;
+  min-height: 44px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #F9FAFB;
+    border-color: #1B4D3E;
+  }
+}
+
+.primaryNavLink {
+  background-color: #1B4D3E;
+  color: #FFFFFF;
+  border-color: #1B4D3E;
+
+  &:hover {
+    background-color: #153D31;
+    color: #FFFFFF;
+  }
+}
+

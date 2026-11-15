@@ -1,0 +1,323 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/modules/reports/components/ReportOverviewModule.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented high-density responsive styles for the Executive Reports & Audits Dashboard.
+ *    - Structured top KPI metrics grid, tab switcher with enterprise underline active states,
+ *      secondary metric indicator banners, and print layout styling.
+ *    - Styled print media queries (`@media print`) ensuring crisp nursery audit reports
+ *      with printable enterprise headers and zero navigation clutter.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills Specification 01: "Mobile-First PWA Layout Efficiency" and Specification 02: "SASS Design Tokens".
+ *    - Guarantees seamless adaptability across smartphone touchscreens, tablets, and desktop workstations.
+ *    - Enables nursery proprietors to print or export comprehensive audit dossiers directly for accounting.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixins (`@include card-surface`, `@include tablet-up`, `@include desktop-up`, `@include touch-target`).
+ *    - Design tokens ($color-primary, $color-primary-light, $color-border, $color-text-main, $border-radius-sm).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Encapsulates scoped CSS module classes applied across `<ReportOverviewModule>`.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.reportsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// 1. TOP HEADER & ACTION CONTROLS
+// ---------------------------------------------------------------------------
+.topActionBar {
+  @include card-surface;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: $border-radius-sm;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.reportMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.reportTitle {
+  font-size: 0.9375rem;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reportSubtitle {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  @include mobile-only {
+    width: 100%;
+    & > * {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 2. EXECUTIVE SUMMARY KPI CARDS
+// ---------------------------------------------------------------------------
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.5rem;
+}
+
+// ---------------------------------------------------------------------------
+// 3. TABBED NAVIGATION BAR
+// ---------------------------------------------------------------------------
+.tabsHeader {
+  @include card-surface;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-radius: $border-radius-sm;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tabButton {
+  min-height: 40px;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: $color-text-muted;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+  border-radius: $border-radius-sm $border-radius-sm 0 0;
+
+  &:hover {
+    color: $color-primary;
+    background-color: $color-primary-light;
+  }
+
+  &.activeTab {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    border-bottom: 2.5px solid $color-primary;
+    background-color: rgba($color-primary, 0.04);
+  }
+}
+
+.tabBadge {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-bold;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background-color: $color-primary-light;
+  color: $color-primary;
+}
+
+// ---------------------------------------------------------------------------
+// 4. TAB CONTENT PANELS & SUB-METRIC CARDS
+// ---------------------------------------------------------------------------
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.subMetricsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+}
+
+.subMetricCard {
+  @include card-surface;
+  padding: 0.6rem 0.85rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.subMetricLabel {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-medium;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.subMetricValue {
+  font-size: 1.125rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.subMetricDesc {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+// ---------------------------------------------------------------------------
+// 5. CULTIVAR & CATEGORY DISTRIBUTION PILLS
+// ---------------------------------------------------------------------------
+.categoryPillsCard {
+  @include card-surface;
+  padding: 0.65rem 0.85rem;
+  border-radius: $border-radius-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.categoryPillsHeader {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  color: $color-text-main;
+}
+
+.categoryPillsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.4rem;
+}
+
+.categoryPill {
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0.6rem;
+  border-radius: $border-radius-sm;
+  background-color: $color-bg-main;
+  border: 1px solid $color-border;
+  gap: 0.1rem;
+}
+
+.categoryPillName {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+}
+
+.categoryPillStats {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.categoryPillVal {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+// ---------------------------------------------------------------------------
+// 6. PRINT ONLY AUDIT HEADER (HIDDEN ON SCREEN)
+// ---------------------------------------------------------------------------
+.printHeader {
+  display: none;
+}
+
+// ---------------------------------------------------------------------------
+// 7. PRINT MEDIA STYLES (@media print)
+// ---------------------------------------------------------------------------
+@media print {
+  @page {
+    margin: 1cm;
+    size: landscape;
+  }
+
+  :global(body) {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .topActionBar,
+  .tabsHeader,
+  .actionButtons {
+    display: none !important;
+  }
+
+  .printHeader {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #1B4D3E;
+  }
+
+  .printOrgName {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #1B4D3E;
+    text-transform: uppercase;
+  }
+
+  .printDocTitle {
+    font-size: 0.875rem;
+    color: #374151;
+  }
+
+  .printTimestamp {
+    font-size: 0.75rem;
+    color: #6B7280;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    margin-bottom: 1rem;
+  }
+
+  .subMetricsRow {
+    grid-template-columns: repeat(4, 1fr) !important;
+    margin-bottom: 1rem;
+  }
+
+  // Prevent row splits inside print pages
+  .reportsContainer :global(table tr) {
+    page-break-inside: avoid;
+  }
+}

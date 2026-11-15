@@ -1,69 +1,109 @@
-import Image from "next/image";
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/app/page.tsx
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Connected the Root Route (`/`) with smart dual-state rendering:
+ *      * Authenticated staff: Renders the Live Nursery Command Center Dashboard (`<NurseryDashboard>`)
+ *        with real-time Prisma metrics (sales, revenue, low-stock alerts, customer credit, and bestsellers).
+ *      * Unauthenticated visitors / Google reviewers: Renders the public Nursery Homepage (`<AboutPage>`)
+ *        introducing Bharti's Green World Nursery, facility capabilities, and links to `/privacy` and `/login`.
+ *    - Ensures the root URL (`/`) works completely as a public homepage without forcing an unauthenticated redirect.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "Also make sure the site root (/) or a public /about page works as a homepage
+ *      without login. Keep the existing design."
+ *    - Satisfies Google Cloud Verification requirements where root landing pages must be accessible without login.
+ *    - Preserves frictionless Command Center experience for authenticated staff.
+ * 
+ * 3. WHAT WAS USED:
+ *    - Next.js Server Component.
+ *    - Next.js `cookies` from `next/headers`.
+ *    - Centralized auth cookies (`AUTH_SESSION_COOKIE`, `AUTH_TOKEN_COOKIE`, `AUTH_USER_COOKIE`).
+ *    - Server Action `getNurseryDashboardMetricsAction()` and `<NurseryDashboard>` component.
+ *    - Public `<AboutPage>` component.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Resolves session tokens from request cookies.
+ *    - If unauthenticated, streams the public nursery homepage.
+ *    - If authenticated, queries PostgreSQL via Prisma and renders the live Nursery Command Center.
+ * 
+ * ----------------------------------------------------------------------------
+ */
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+import { cookies } from 'next/headers';
+import {
+  AUTH_SESSION_COOKIE,
+  AUTH_TOKEN_COOKIE,
+  AUTH_USER_COOKIE,
+} from '@/lib/constants/auth';
+import {
+  getNurseryDashboardMetricsAction,
+  NurseryDashboard,
+  NurseryDashboardMetrics,
+} from '@/modules/dashboard';
+import AboutPage from './about/page';
+
+export const dynamic = 'force-dynamic';
+
+export default async function RootPage() {
+  const cookieStore = await cookies();
+  const sessionToken =
+    cookieStore.get(AUTH_SESSION_COOKIE)?.value ||
+    cookieStore.get(AUTH_TOKEN_COOKIE)?.value ||
+    cookieStore.get(AUTH_USER_COOKIE)?.value;
+
+  const isAuthenticated = Boolean(sessionToken && sessionToken.trim() !== '');
+
+  // If visitor is unauthenticated, render the public Nursery Homepage
+  if (!isAuthenticated) {
+    return <AboutPage />;
+  }
+
+  // Fetch live operational telemetry for authenticated staff
+  const result = await getNurseryDashboardMetricsAction();
+
+  const fallbackMetrics: NurseryDashboardMetrics = {
+    generatedAt: new Date().toISOString(),
+    todaySales: { revenue: 0, billCount: 0 },
+    salesTrend7Days: [],
+    paymentModeBreakdown: {
+      cash: 0,
+      upi: 0,
+      udhar: 0,
+      total: 0,
+      cashPercent: 0,
+      upiPercent: 0,
+      udharPercent: 0,
+    },
+    udharOverview: {
+      totalPendingUdhar: 0,
+      overdueCustomersCount: 0,
+      topOverdueCustomers: [],
+    },
+    inventoryOverview: {
+      totalReadyPots: 0,
+      totalPlantVarieties: 0,
+      lowStockCount: 0,
+      lowStockAlerts: [],
+    },
+    bestsellingPlants: [],
+    contractsOverview: {
+      activeProjectsCount: 0,
+      totalProjectsCount: 0,
+      pipelineEstimate: 0,
+      totalAdvanceCollected: 0,
+      pendingBalance: 0,
+    },
+    recentInvoices: [],
+  };
+
+  const metrics = result.success && result.data ? result.data : fallbackMetrics;
+
+  return <NurseryDashboard initialData={metrics} />;
 }

@@ -1,0 +1,224 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/styles/globals.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Consolidated global styles by importing variables, mixins, and base reset stylesheets.
+ *    - Exposed botanical flower accent tokens in `:root` CSS custom properties (Rose, Marigold, Lavender, Cornflower).
+ *    - Implemented universal botanical badge utility classes (`.badge-rose`, `.badge-marigold`, `.badge-lavender`, `.badge-emerald`, `.badge-cornflower`).
+ *    - Configured root HTML and body styling with $color-bg-main (#F8FAF9) and typography defaults.
+ *    - Established PWA bottom navigation clearance utility (.pwa-bottom-clearance) enforcing $bottom-nav-clearance (9rem / pb-36).
+ *    - Configured touch-optimized scrolling and accessibility focus outlines.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - To establish an elegant, unified design foundation across all ERP modules.
+ *    - To break excessive green monochrome visual fatigue with balanced botanical flower accents.
+ *    - To ensure fixed headers and floating action bars never obscure table rows or form controls on mobile viewports.
+ *    - To enforce zero hardcoded styles by deriving all foundational layout rules from SASS tokens.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS `@import` chain for modular architecture.
+ *    - Global tokens ($color-bg-main, $font-family-base, $bottom-nav-clearance, botanical flower accents).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Imported globally in Next.js root layout (`src/app/layout.tsx`).
+ *    - Exposes custom properties and utility classes across all modules.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+@import '@/styles/base/reset';
+
+// ============================================================================
+// 1. ROOT CSS CUSTOM PROPERTIES (Botanical Flora Chromatic Tokens)
+// ============================================================================
+:root {
+  --color-primary: #{$color-primary};
+  --color-primary-hover: #{$color-primary-hover};
+  --color-primary-light: #{$color-primary-light};
+
+  /* Central Flower-Inspired Accent Palette */
+  --accent-hibiscus: #EC4899;   /* pink */
+  --accent-marigold: #F59E0B;   /* orange */
+  --accent-sunflower: #FACC15;  /* yellow */
+  --accent-lavender: #A78BFA;   /* purple */
+  --accent-coral: #FB7185;      /* red/coral */
+  --accent-sky: #38BDF8;        /* blue */
+
+  /* Semantic Feedback & Status Aliases */
+  --color-success: #10B981;
+  --color-warning: var(--accent-marigold);
+  --color-danger: var(--accent-coral);
+  --color-info: var(--accent-sky);
+
+  /* Botanical Flower Accents */
+  --color-rose: #{$color-rose};
+  --color-rose-light: #{$color-rose-light};
+  --color-rose-border: #{$color-rose-border};
+  --color-rose-text: #{$color-rose-text};
+
+  --color-marigold: #{$color-marigold};
+  --color-marigold-light: #{$color-marigold-light};
+  --color-marigold-border: #{$color-marigold-border};
+  --color-marigold-text: #{$color-marigold-text};
+
+  --color-lavender: #{$color-lavender};
+  --color-lavender-light: #{$color-lavender-light};
+  --color-lavender-border: #{$color-lavender-border};
+  --color-lavender-text: #{$color-lavender-text};
+
+  --color-cornflower: #{$color-cornflower};
+  --color-cornflower-light: #{$color-cornflower-light};
+  --color-cornflower-border: #{$color-cornflower-border};
+  --color-cornflower-text: #{$color-cornflower-text};
+}
+
+// ============================================================================
+// 2. GLOBAL ROOT & BODY STYLING
+// ============================================================================
+html {
+  font-size: 16px;
+  background-color: #f9f6f0;
+}
+
+body {
+  background-color: #f9f6f0;
+  color: #1b3a2b;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  font-weight: $font-weight-regular;
+  line-height: 1.5;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+// ============================================================================
+// 3. PWA BOTTOM CLEARANCE UTILITY (STRICT: PREVENTS CLIPPING)
+// ============================================================================
+.pwa-bottom-clearance {
+  padding-bottom: $bottom-nav-clearance;
+}
+
+// ============================================================================
+// 4. COMMON INTERACTIVE & ACCESSIBILITY STATES
+// ============================================================================
+:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+// Smooth scroll container for horizontal tables on mobile
+.touch-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+// ============================================================================
+// 5. BOTANICAL FLOWER ACCENT BADGE UTILITIES
+// ============================================================================
+.badge-emerald,
+.badge-green,
+.badge-success {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-marigold,
+.badge-warning {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-coral,
+.badge-rose,
+.badge-danger {
+  background-color: #FFF1F2;
+  color: #BE123C;
+  border: 1px solid #FECDD3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-sky,
+.badge-info,
+.badge-cornflower {
+  background-color: #F0F9FF;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-hibiscus {
+  background-color: #FDF2F8;
+  color: #BE185D;
+  border: 1px solid #FBCFE8;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-lavender {
+  background-color: #F5F3FF;
+  color: #6D28D9;
+  border: 1px solid #DDD6FE;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}
+
+.badge-sunflower {
+  background-color: #FEFCE8;
+  color: #854D0E;
+  border: 1px solid #FEF08A;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: $border-radius-full;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+}

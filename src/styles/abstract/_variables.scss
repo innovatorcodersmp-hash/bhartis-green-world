@@ -1,0 +1,159 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/styles/abstract/_variables.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Established the centralized single source of truth for all global SASS design tokens.
+ *    - Retained primary brand Forest Green (#1B4D3E) for top navigation headers and primary action buttons.
+ *    - Introduced refined botanical flower accent palettes:
+ *      * Rose / Coral ($color-rose) for critical alerts, mortality loss, high priority, and return tags.
+ *      * Marigold / Amber ($color-marigold) for pending dues, low stock warnings, and Udhar credit balances.
+ *      * Lavender / Violet ($color-lavender) for special botanical categories, asset valuations, and premium contracts.
+ *      * Cornflower / Iris ($color-cornflower) for informational counts, cultivar varieties, and audit logs.
+ *    - Removed green monochrome oversaturation on secondary tags and stat cards.
+ *    - Specified mobile-first PWA typography scales and layout metrics ($header-height: 64px, $min-touch-target: 44px).
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "TASK: INTRODUCE BOTANICAL FLOWER ACCENT COLORS ACROSS ERP MODULES".
+ *    - Eliminates monotonous all-green visual fatigue across dense data tables and dashboard metric bars.
+ *    - Delivers an organic, vibrant, elegant botanical design aesthetic inspired by nursery flora.
+ *    - Ensures strict WCAG AA contrast compliance and mobile ergonomics for nursery workers.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS/SCSS variable declarations ($name: value).
+ *    - Forest-green brand tokens and complementary botanical flower chromatic scales.
+ *    - Viewport breakpoints tailored for phone (320-767px), tablet (768-1023px), and desktop (1024px+).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Exported variables are imported by `@/styles/abstract/_mixins.scss`, `globals.scss`, and feature SCSS modules.
+ *    - Components reference these tokens to render high-contrast, visually distinguishable badges and metric cards.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+// ============================================================================
+// 1. BRAND PALETTE (Forest Green PWA Theme - Bharti's Green World)
+// ============================================================================
+$color-primary:          #1B4D3E; // Forest Green (Header, main actions, primary branding)
+$color-primary-hover:    #13392E; // Dark Forest Green (Active / hover states)
+$color-primary-light:    #E8F2EE; // Soft Sage tint (Card highlights, selected rows)
+$color-secondary:        #2E7D32; // Foliage Green (Secondary action accents)
+$color-secondary-hover:  #256629; // Deep foliage hover
+
+// ============================================================================
+// 1B. FLOWER-INSPIRED COMPLEMENTARY ACCENT PALETTE (Central Theme)
+// ============================================================================
+$accent-hibiscus:  #EC4899;   /* pink */
+$accent-marigold:  #F59E0B;   /* orange */
+$accent-sunflower: #FACC15;  /* yellow */
+$accent-lavender:  #A78BFA;   /* purple */
+$accent-coral:     #FB7185;      /* red/coral */
+$accent-sky:       #38BDF8;        /* blue */
+
+// Rose / Coral (Alerts, high priority, plant mortality, returns)
+$color-rose:             #FB7185;
+$color-rose-hover:       #F43F5E;
+$color-rose-light:       #FFF1F2;
+$color-rose-border:      #FECDD3;
+$color-rose-text:        #BE123C;
+
+// Marigold / Amber (Pending dues, warnings, seasonal saplings, Udhar credit)
+$color-marigold:         #F59E0B;
+$color-marigold-hover:   #D97706;
+$color-marigold-light:   #FFFBEB;
+$color-marigold-border:  #FDE68A;
+$color-marigold-text:    #B45309;
+
+// Lavender / Violet (Special botanical categories, asset valuations, premium contracts)
+$color-lavender:         #A78BFA;
+$color-lavender-hover:   #8B5CF6;
+$color-lavender-light:   #F5F3FF;
+$color-lavender-border:  #DDD6FE;
+$color-lavender-text:    #6D28D9;
+
+// Sky / Cornflower (Information badges, cultivar counts, audit timestamps)
+$color-cornflower:        #38BDF8;
+$color-cornflower-hover:  #0284C7;
+$color-cornflower-light:  #F0F9FF;
+$color-cornflower-border: #BAE6FD;
+$color-cornflower-text:   #0369A1;
+$color-cornflower-border: #BFDBFE;
+$color-cornflower-text:   #1E40AF;
+
+// ============================================================================
+// 2. NEUTRALS & BACKGROUNDS
+// ============================================================================
+$color-bg-main:          #F8FAF9; // Soft organic mist background
+$color-surface:          #FFFFFF; // Pure white card & container surfaces
+$color-border:           #E5E7EB; // Neutral border divider
+$color-border-dark:      #D1D5DB; // High-contrast border for input fields
+
+// ============================================================================
+// 3. TYPOGRAPHY / TEXT COLORS
+// ============================================================================
+$color-text-main:        #1F2937; // High-contrast Charcoal body text
+$color-text-muted:       #6B7280; // Secondary muted text (timestamps, hints)
+$color-text-inverse:     #FFFFFF; // Contrast text for primary buttons and dark surfaces
+
+// ============================================================================
+// 4. STATUS & METRIC INDICATORS
+// ============================================================================
+$color-success:          #16A34A; // Active status, healthy batch, profitable metric
+$color-warning:          $color-marigold; // Low stock alert, payment pending
+$color-danger:           $color-rose; // Expired quarantine, stockout, critical error
+$color-info:             $color-cornflower; // Information badges, sync indicator
+$color-special:          $color-lavender; // Premium contracts, rare botanical varieties
+
+// ============================================================================
+// 5. TYPOGRAPHY SCALES (16px base font strictly prevents mobile auto-zoom)
+// ============================================================================
+$font-family-base:       system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-size-xs:           0.75rem;   // 12px - Footers, micro badges
+$font-size-sm:           0.875rem;  // 14px - Table sub-items, auxiliary labels
+$font-size-base:         1rem;      // 16px - PWA standard input text (prevents iOS/Android auto-zoom)
+$font-size-lg:           1.125rem;  // 18px - Section subheadings, card titles
+$font-size-xl:           1.375rem;  // 22px - Metric values, modal titles
+$font-size-2xl:          1.75rem;   // 28px - Primary module page headers
+
+$font-weight-regular:    400;
+$font-weight-medium:     500;
+$font-weight-semibold:   600;
+$font-weight-bold:       700;
+
+// ============================================================================
+// 6. LAYOUT & PWA TOUCH DIMENSIONS
+// ============================================================================
+$header-height:          64px;      // Fixed top navigation bar height (scaled for prominent brand logo legibility)
+$bottom-nav-clearance:   9rem;      // Equal to pb-36 clearance (prevents clipping behind mobile navigation)
+$min-touch-target:       44px;      // WCAG & PWA minimum touch target dimension (height/width)
+
+$border-radius-sm:       6px;       // Tags, micro inputs
+$border-radius-md:       10px;      // Standard cards, buttons, dialog containers
+$border-radius-lg:       16px;      // Large module metric summary containers
+$border-radius-full:     9999px;    // Rounded status pills and circular avatars
+
+$shadow-sm:              0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md:              0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg:              0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-drawer:          -4px 0 24px rgba(0, 0, 0, 0.15);
+
+$transition-fast:        150ms ease;
+$transition-normal:      200ms ease;
+
+$z-index-action-bar:     900;
+$z-index-header:         1000;
+$z-index-backdrop:       1050;
+$z-index-drawer:         1100;
+
+// ============================================================================
+// 7. RESPONSIVE BREAKPOINTS
+// ============================================================================
+$breakpoint-sm:          576px;     // Compact mobile phones
+$breakpoint-md:          768px;     // Tablet portrait & large mobile
+$breakpoint-lg:          1024px;    // Tablet landscape & desktop monitors
+$breakpoint-xl:          1280px;    // Widescreen desktop workstations

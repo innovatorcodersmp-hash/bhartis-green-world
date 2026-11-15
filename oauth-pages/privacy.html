@@ -1,0 +1,163 @@
+<!--
+  @author Saniya Patil
+  @project Bharti's Green World ERP (Kolhapur)
+  @file oauth-pages/privacy.html
+  
+  ----------------------------------------------------------------------------
+  ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+  ----------------------------------------------------------------------------
+  
+  1. WHAT WAS DONE:
+     - Created standalone static Privacy Policy page for "BGW ERP Backup" outside the Next.js build.
+     - Formulated short privacy disclosures:
+       * Google Drive access is used solely to upload the nursery's own business database backup files.
+       * Does not collect, sell, or share personal data with third parties.
+       * The tool is private and used only by the nursery owner.
+       * Added "Last updated: 15 November 2026" date and contact email bhartisgreenworld@gmail.com.
+  
+  2. WHY IT WAS DONE:
+     - Fulfills user request: "Create a standalone static site in a new folder ./oauth-pages (outside src,
+       not part of the Next.js build) with two files: index.html and privacy.html."
+     - Complies with Google OAuth / Drive API verification policies for standalone review hosting.
+  
+  3. WHAT WAS USED:
+     - Pure HTML5 with inline CSS styling. Zero external scripts or network dependencies.
+  
+  4. HOW IT WORKS:
+     - Directly readable by users, administrators, and Google security teams in any browser.
+  
+  ----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - BGW ERP Backup</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #F4F7F5;
+      color: #1F2937;
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .card {
+      background: #FFFFFF;
+      max-width: 580px;
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #E5E7EB;
+      border-top: 5px solid #1B4D3E;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #1B4D3E;
+      background-color: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      margin-bottom: 0.85rem;
+    }
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #1B4D3E;
+      margin-bottom: 0.25rem;
+    }
+    .date {
+      font-size: 0.8125rem;
+      color: #6B7280;
+      margin-bottom: 1.25rem;
+    }
+    p {
+      font-size: 0.9375rem;
+      color: #374151;
+      margin-bottom: 0.9rem;
+    }
+    ul {
+      margin-bottom: 1.25rem;
+      padding-left: 1.25rem;
+    }
+    li {
+      font-size: 0.9375rem;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+    .contact-box {
+      background-color: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #92400E;
+    }
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 1.25rem;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+    }
+    a {
+      color: #1B4D3E;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    a:hover {
+      color: #047857;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Bharti's Green World • Kolhapur</span>
+    <h1>Privacy Policy for BGW ERP Backup</h1>
+    <div class="date">Last updated: 15 November 2026</div>
+
+    <p>
+      <strong>BGW ERP Backup</strong> is an internal data redundancy tool developed for <strong>Bharti's Green World Nursery &amp; Landscaping, Kolhapur</strong>.
+    </p>
+
+    <ul>
+      <li>
+        <strong>Exclusive Cloud Purpose:</strong> The application uses the nursery owner's Google Drive account only to upload the nursery's own internal database backup files.
+      </li>
+      <li>
+        <strong>No Personal Data Collection or Sharing:</strong> The application does not collect, sell, monetize, or share personal data with third parties.
+      </li>
+      <li>
+        <strong>Owner-Only Access:</strong> BGW ERP Backup is a private operational utility used solely by the nursery owner to safeguard botanical inventory and billing data against loss.
+      </li>
+    </ul>
+
+    <div class="contact-box">
+      <strong>Contact:</strong> For questions regarding this policy or data safety, email us at <a href="mailto:bhartisgreenworld@gmail.com">bhartisgreenworld@gmail.com</a>.
+    </div>
+
+    <div class="footer-links">
+      <a href="index.html">&larr; Back to Home</a>
+      <span>Bharti's Green World Nursery</span>
+    </div>
+  </div>
+</body>
+</html>
+

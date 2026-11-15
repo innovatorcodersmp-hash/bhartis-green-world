@@ -1,0 +1,508 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/components/layout/HamburgerDrawer.module.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Refined navigation menu styling with high-contrast, botanical flower accents:
+ *      * Text Color: Warm off-white (#F5F0E6) for active, muted cream-gray (rgba(245,240,230,0.65)) for inactive.
+ *      * Section/Footer Text: Muted cream-gray, completely eliminating monochrome green fatigue.
+ *      * Drawer Background: Darker, neutral deep green-charcoal (#0F1A14) with subtle radial gradient.
+ *      * Inactive Item Hover: Clean translucent glass (rgba(255, 255, 255, 0.05)), not green.
+ *      * Icon Tiles: Wrapped each icon in a 36px rounded-xl tile with 15% opacity accent background and full accent icon.
+ *      * Active Item: Removed bright green gradient pill. Uses item's own accent at 12% opacity, 1px border at 30% opacity,
+ *        a 3px left indicator bar in full accent color, and matching accent right dot.
+ *      * Brand green strictly preserved for Header logo, Sprout header icon, and primary buttons.
+ *    - Maintained ergonomic 48px touch targets for nursery field staff and billing counter operators.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - Fulfills user request: "Refine the navigation menu (sidebar/mobile drawer) styling only. Do NOT change functionality,
+ *      routes or layout structure."
+ *    - Eliminates excessive monochrome green saturation while ensuring WCAG AA contrast and mobile/PWA ergonomics.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SCSS design tokens ($z-index-backdrop, $z-index-drawer, $transition-normal).
+ *    - CSS custom property accent mapping (--item-accent, --item-accent-rgb).
+ * 
+ * 4. HOW IT WORKS:
+ *    - Scoped class names map individual route items to their distinct flower accent color, rendering 36px
+ *      tiles, left active indicator bars, and subtle borders.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(5, 15, 11, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: $z-index-backdrop;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity $transition-normal, visibility $transition-normal;
+  cursor: pointer;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 2. BACKGROUND: Neutral Deep Green-Charcoal (#0F1A14) with Subtle Gradient
+// ---------------------------------------------------------------------------
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 86vw;
+  background: radial-gradient(circle at 100% 0%, #15241C 0%, #0F1A14 55%, #0B1410 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.55);
+  z-index: $z-index-drawer;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform $transition-normal cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DRAWER HEADER: User Profile Card, Date Line & Tricolor Segmented Divider
+// ---------------------------------------------------------------------------
+.drawerHeader {
+  background: rgba(15, 26, 20, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1rem 1.15rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.headerTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(236, 72, 153, 0.2); // Hibiscus at 20% opacity
+  border: 1px solid rgba(236, 72, 153, 0.45); // 1px Hibiscus border at 45% opacity
+  color: #EC4899; // Initial in Hibiscus
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.onlineDot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #10B981; // Green online dot
+  border: 2px solid #0F1A14; // 2px border in drawer background color (#0F1A14)
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: $font-weight-semibold;
+  color: #F5F0E6; // Warm off-white
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userRole {
+  font-size: 12px;
+  color: rgba(245, 240, 230, 0.6); // Muted cream-gray
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeButton {
+  min-height: $min-touch-target;
+  min-width: $min-touch-target;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius-sm;
+  color: rgba(245, 240, 230, 0.75);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #F5F0E6;
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  &:active {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.dateLine {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: 12px;
+  color: rgba(245, 240, 230, 0.6); // Muted cream-gray
+  line-height: 1;
+
+  .calendarIcon {
+    color: #F59E0B; // 16px Calendar icon in Marigold
+    flex-shrink: 0;
+  }
+}
+
+.tricolorDivider {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(52, 211, 153, 0.4) 0%,
+    rgba(52, 211, 153, 0.4) 33.33%,
+    rgba(236, 72, 153, 0.4) 33.33%,
+    rgba(236, 72, 153, 0.4) 66.66%,
+    rgba(245, 158, 11, 0.4) 66.66%,
+    rgba(245, 158, 11, 0.4) 100%
+  );
+}
+
+// ---------------------------------------------------------------------------
+// NAV CONTAINER
+// ---------------------------------------------------------------------------
+.navContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.875rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3. FLOWER ACCENT MAPPINGS (Scoped CSS Variables)
+// ---------------------------------------------------------------------------
+.green {
+  --item-accent: #10B981;
+  --item-accent-rgb: 16, 185, 129;
+}
+
+.hibiscus {
+  --item-accent: #EC4899;
+  --item-accent-rgb: 236, 72, 153;
+}
+
+.sky {
+  --item-accent: #38BDF8;
+  --item-accent-rgb: 56, 189, 248;
+}
+
+.marigold {
+  --item-accent: #F59E0B;
+  --item-accent-rgb: 245, 158, 11;
+}
+
+.sunflower {
+  --item-accent: #FACC15;
+  --item-accent-rgb: 250, 204, 21;
+}
+
+.lavender {
+  --item-accent: #A78BFA;
+  --item-accent-rgb: 167, 139, 250;
+}
+
+.coral {
+  --item-accent: #FB7185;
+  --item-accent-rgb: 251, 113, 133;
+}
+
+.neutral {
+  --item-accent: #9CA3AF;
+  --item-accent-rgb: 156, 163, 175;
+}
+
+// ---------------------------------------------------------------------------
+// 3. ICON TILES: 36px Rounded-xl with 15% Accent Background & Full Accent Icon
+// ---------------------------------------------------------------------------
+.iconTile,
+.iconWrapper {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 12px; // rounded-xl
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(var(--item-accent-rgb), 0.15);
+  color: var(--item-accent);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+
+  svg {
+    color: var(--item-accent);
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 1 & 4. NAV ITEM (INACTIVE & ACTIVE STATES)
+// ---------------------------------------------------------------------------
+.navItem {
+  min-height: 48px; // PWA ergonomic touch target
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.45rem 0.875rem;
+  border-radius: 12px;
+  color: rgba(245, 240, 230, 0.65); // Muted cream-gray, not green
+  font-size: 0.9375rem;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  // Inactive Hover: rgba(255, 255, 255, 0.05), NOT green
+  &:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #F5F0E6; // Warm off-white on hover
+    transform: translateX(2px);
+
+    .iconTile,
+    .iconWrapper {
+      background-color: rgba(var(--item-accent-rgb), 0.22);
+      filter: drop-shadow(0 0 6px rgba(var(--item-accent-rgb), 0.4));
+      transform: scale(1.04);
+    }
+  }
+
+  // Active State: Item's own accent @ 12% opacity, 1px border @ 30%, 3px left indicator bar
+  &.active {
+    background-color: rgba(var(--item-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--item-accent-rgb), 0.30);
+    color: #F5F0E6; // Warm off-white
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+    // 3px left indicator bar in the full accent color
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background-color: var(--item-accent);
+      box-shadow: 0 0 8px rgba(var(--item-accent-rgb), 0.6);
+    }
+
+    .iconTile,
+    .iconWrapper {
+      background-color: rgba(var(--item-accent-rgb), 0.25);
+      color: var(--item-accent);
+      filter: drop-shadow(0 0 8px rgba(var(--item-accent-rgb), 0.55));
+      transform: scale(1.05);
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.label {
+  flex: 1;
+  letter-spacing: 0.01em;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+// Right dot in item's accent color
+.activeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--item-accent);
+  box-shadow: 0 0 8px rgba(var(--item-accent-rgb), 0.7);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------------------
+// LOGOUT BUTTON
+// ---------------------------------------------------------------------------
+.logoutButton {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.45rem 0.875rem;
+  border-radius: 12px;
+  color: rgba(251, 113, 133, 0.85); // Coral
+  font-size: 0.9375rem;
+  font-weight: $font-weight-medium;
+  background: rgba(251, 113, 133, 0.08);
+  border: 1px solid rgba(251, 113, 133, 0.2);
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  transition: all $transition-fast;
+  margin-top: 0.5rem;
+
+  &:hover {
+    background: rgba(251, 113, 133, 0.16);
+    border-color: rgba(251, 113, 133, 0.35);
+    color: #F5F0E6;
+    box-shadow: 0 4px 15px rgba(251, 113, 133, 0.15);
+    transform: translateX(2px);
+
+    .iconTile,
+    .iconWrapper {
+      background-color: rgba(251, 113, 133, 0.25);
+      color: #FB7185;
+      transform: scale(1.05);
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .iconTile,
+  .iconWrapper {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(251, 113, 133, 0.15);
+    color: #FB7185;
+    flex-shrink: 0;
+    transition: all $transition-fast;
+
+    svg {
+      color: #FB7185;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 1. DRAWER FOOTER: Muted Cream-Gray Text, Not Green
+// ---------------------------------------------------------------------------
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.875rem 1.15rem;
+  background: rgba(11, 20, 16, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+  font-size: 0.6875rem;
+
+  a {
+    color: rgba(245, 240, 230, 0.65);
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #F5F0E6;
+    }
+  }
+
+  span {
+    color: rgba(245, 240, 230, 0.25);
+  }
+}
+
+.facilityInfo {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: rgba(245, 240, 230, 0.75); // Muted cream-gray, not green
+}
+
+.appVersion {
+  font-size: $font-size-xs;
+  color: rgba(245, 240, 230, 0.45); // Muted cream-gray, not green
+}

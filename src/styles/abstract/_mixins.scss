@@ -1,0 +1,100 @@
+/**
+ * @author Saniya Patil
+ * @project Bharti's Green World ERP (Kolhapur)
+ * @file src/styles/abstract/_mixins.scss
+ * 
+ * ----------------------------------------------------------------------------
+ * ARCHITECTURAL EXPLANATION & ENGINEERING METADATA:
+ * ----------------------------------------------------------------------------
+ * 
+ * 1. WHAT WAS DONE:
+ *    - Implemented standardized responsive media query mixins and ergonomic PWA utility mixins.
+ *    - Created `mobile-only`, `tablet-up`, and `desktop-up` breakpoint utilities.
+ *    - Built accessibility and touch target mixin (`touch-target`) enforcing 44px x 44px interactive minimums.
+ *    - Configured reusable layout helpers: `card-surface`, `flex-center`, and `flex-between`.
+ * 
+ * 2. WHY IT WAS DONE:
+ *    - To maintain uniform responsive behavior across nursery mobile devices, tablets, and desktop workstations.
+ *    - To prevent ergonomic frustration for site workers operating handheld devices in the field.
+ *    - To encapsulate common flexbox and styling patterns to avoid repetitive boilerplate.
+ * 
+ * 3. WHAT WAS USED:
+ *    - SASS mixin directives (`@mixin`, `@content`).
+ *    - Centralized breakpoint and dimension variables imported from `_variables.scss`.
+ * 
+ * 4. HOW IT WORKS:
+ *    - Module components include these mixins to conditionally apply styles across viewport queries
+ *      and format interactive buttons/cards according to ERP design standards.
+ * 
+ * ----------------------------------------------------------------------------
+ */
+
+@import '@/styles/abstract/variables';
+
+// ============================================================================
+// 1. RESPONSIVE BREAKPOINT MIXINS
+// ============================================================================
+
+/// Targets mobile viewport (below 768px)
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+/// Targets tablet viewport and above (768px and up)
+@mixin tablet-up {
+  @media (min-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+/// Targets desktop monitors and wide displays (1024px and up)
+@mixin desktop-up {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+// ============================================================================
+// 2. PWA TOUCH & ACCESSIBILITY MIXINS
+// ============================================================================
+
+/// Enforces the mandatory 44px x 44px minimum touch area for mobile nursery operations
+@mixin touch-target {
+  min-height: $min-touch-target;
+  min-width: $min-touch-target;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ============================================================================
+// 3. SURFACE & CONTAINER MIXINS
+// ============================================================================
+
+/// Standard ERP card surface with subtle border and elevation
+@mixin card-surface {
+  background-color: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-sm;
+}
+
+// ============================================================================
+// 4. FLEXBOX UTILITIES
+// ============================================================================
+
+/// Centered flex layout for icons, badges, and button interiors
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/// Standard space-between layout for form headers and table action bars
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
