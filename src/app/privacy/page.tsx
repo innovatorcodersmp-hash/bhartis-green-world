@@ -237,10 +237,7 @@ export default function PrivacyPolicyPage() {
       <div className={styles.actionsRow}>
         <Link href={APP_ROUTES.ABOUT} className={styles.navLink}>
           <ArrowLeft size={14} />
-          About Nursery
-        </Link>
-        <Link href={APP_ROUTES.DASHBOARD} className={styles.navLink}>
-          Nursery Homepage
+          About Nursery / Overview
         </Link>
         <Link href={APP_ROUTES.LOGIN} className={`${styles.navLink} ${styles.primaryNavLink}`}>
           Staff ERP Login

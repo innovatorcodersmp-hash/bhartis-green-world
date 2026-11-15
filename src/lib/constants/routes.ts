@@ -31,7 +31,7 @@
 
 export const APP_ROUTES = {
   // Core & Dashboard
-  DASHBOARD: '/',
+  DASHBOARD: '/dashboard',
   DASHBOARD_ALIAS: '/dashboard',
   ABOUT: '/about',
   PRIVACY: '/privacy',

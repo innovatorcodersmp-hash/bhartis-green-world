@@ -203,9 +203,6 @@ export default function AboutPage() {
           <ShieldCheck size={14} />
           Privacy Policy
         </Link>
-        <Link href={APP_ROUTES.DASHBOARD} className={styles.navLink}>
-          Nursery Homepage
-        </Link>
         <Link href={APP_ROUTES.LOGIN} className={`${styles.navLink} ${styles.primaryNavLink}`}>
           Staff ERP Login
           <ArrowRight size={13} />

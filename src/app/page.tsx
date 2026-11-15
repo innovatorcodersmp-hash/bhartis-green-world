@@ -8,46 +8,36 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Connected the Root Route (`/`) with smart dual-state rendering:
- *      * Authenticated staff: Renders the Live Nursery Command Center Dashboard (`<NurseryDashboard>`)
- *        with real-time Prisma metrics (sales, revenue, low-stock alerts, customer credit, and bestsellers).
- *      * Unauthenticated visitors / Google reviewers: Renders the public Nursery Homepage (`<AboutPage>`)
- *        introducing Bharti's Green World Nursery, facility capabilities, and links to `/privacy` and `/login`.
- *    - Ensures the root URL (`/`) works completely as a public homepage without forcing an unauthenticated redirect.
+ *    - Transformed the Root Route (`/`) into an authentication entry router:
+ *      * Unauthenticated visitors are automatically redirected to the login page (`/login`).
+ *      * Authenticated staff and administrators are redirected to the live Nursery Command Center (`/dashboard`).
+ *    - The public nursery marketing and facility overview landing page is hosted at `/about`.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills user request: "Also make sure the site root (/) or a public /about page works as a homepage
- *      without login. Keep the existing design."
- *    - Satisfies Google Cloud Verification requirements where root landing pages must be accessible without login.
- *    - Preserves frictionless Command Center experience for authenticated staff.
+ *    - Fulfills user request:
+ *      * "/" must redirect unauthenticated visitors to the login page, and redirect already-logged-in users to the dashboard.
+ *      * Move the current public landing page to /about.
  * 
  * 3. WHAT WAS USED:
- *    - Next.js Server Component.
- *    - Next.js `cookies` from `next/headers`.
+ *    - Next.js Server Component with `cookies` from `next/headers` and `redirect` from `next/navigation`.
  *    - Centralized auth cookies (`AUTH_SESSION_COOKIE`, `AUTH_TOKEN_COOKIE`, `AUTH_USER_COOKIE`).
- *    - Server Action `getNurseryDashboardMetricsAction()` and `<NurseryDashboard>` component.
- *    - Public `<AboutPage>` component.
+ *    - Centralized route constants (`APP_ROUTES`).
  * 
  * 4. HOW IT WORKS:
- *    - Resolves session tokens from request cookies.
- *    - If unauthenticated, streams the public nursery homepage.
- *    - If authenticated, queries PostgreSQL via Prisma and renders the live Nursery Command Center.
+ *    - Resolves active session token from HTTP-only cookies.
+ *    - Issues immediate server-side HTTP 307 redirect to `/dashboard` or `/login`.
  * 
  * ----------------------------------------------------------------------------
  */
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import {
   AUTH_SESSION_COOKIE,
   AUTH_TOKEN_COOKIE,
   AUTH_USER_COOKIE,
 } from '@/lib/constants/auth';
-import {
-  getNurseryDashboardMetricsAction,
-  NurseryDashboard,
-  NurseryDashboardMetrics,
-} from '@/modules/dashboard';
-import AboutPage from './about/page';
+import { APP_ROUTES } from '@/lib/constants/routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,50 +50,9 @@ export default async function RootPage() {
 
   const isAuthenticated = Boolean(sessionToken && sessionToken.trim() !== '');
 
-  // If visitor is unauthenticated, render the public Nursery Homepage
-  if (!isAuthenticated) {
-    return <AboutPage />;
+  if (isAuthenticated) {
+    redirect(APP_ROUTES.DASHBOARD);
   }
 
-  // Fetch live operational telemetry for authenticated staff
-  const result = await getNurseryDashboardMetricsAction();
-
-  const fallbackMetrics: NurseryDashboardMetrics = {
-    generatedAt: new Date().toISOString(),
-    todaySales: { revenue: 0, billCount: 0 },
-    salesTrend7Days: [],
-    paymentModeBreakdown: {
-      cash: 0,
-      upi: 0,
-      udhar: 0,
-      total: 0,
-      cashPercent: 0,
-      upiPercent: 0,
-      udharPercent: 0,
-    },
-    udharOverview: {
-      totalPendingUdhar: 0,
-      overdueCustomersCount: 0,
-      topOverdueCustomers: [],
-    },
-    inventoryOverview: {
-      totalReadyPots: 0,
-      totalPlantVarieties: 0,
-      lowStockCount: 0,
-      lowStockAlerts: [],
-    },
-    bestsellingPlants: [],
-    contractsOverview: {
-      activeProjectsCount: 0,
-      totalProjectsCount: 0,
-      pipelineEstimate: 0,
-      totalAdvanceCollected: 0,
-      pendingBalance: 0,
-    },
-    recentInvoices: [],
-  };
-
-  const metrics = result.success && result.data ? result.data : fallbackMetrics;
-
-  return <NurseryDashboard initialData={metrics} />;
+  redirect(APP_ROUTES.LOGIN);
 }

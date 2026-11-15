@@ -8,23 +8,25 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Implemented Next.js 16 proxy convention routing handler (`proxy.ts`).
- *    - Whitelists public static assets, images, icons, and PWA manifest assets.
- *    - Explicitly whitelists public unauthenticated routes:
+ *    - Implemented Next.js 16 proxy routing handler (`proxy.ts`).
+ *    - Configured Root Route (`/`) authentication routing:
+ *      * Unauthenticated visitors are redirected directly to `/login`.
+ *      * Authenticated staff and administrators are redirected to `/dashboard`.
+ *    - Maintained strictly restricted public routes:
+ *      * `/about`: Public nursery overview and capabilities homepage.
  *      * `/privacy`: Public static privacy policy for "BGW ERP Backup".
- *      * `/about`: Public botanical nursery information and overview.
- *      * `/`: Root landing homepage (renders public nursery overview when unauthenticated,
- *        and live Nursery Command Center when authenticated).
- *      * `/api/cron/backup`: Cron API route secured via `CRON_SECRET` Bearer token.
- *    - Strictly protects all internal nursery operational routes (`/pos`, `/reports`,
- *      `/customers`, `/inventory`, `/vendors`, `/contracts`, `/labor`, `/plants`, `/settings`).
- *    - Ensures dual compatibility across Next.js 16 proxy and legacy middleware specifications.
+ *      * `/login`: Staff authentication portal (redirects to `/dashboard` if already authenticated).
+ *      * `/api/cron/backup`: Automated backup cron endpoint secured via `CRON_SECRET` Bearer token.
+ *    - Strictly protects all other routes (including `/settings`, `/dashboard`, `/pos`, `/inventory`,
+ *      `/contracts`, `/customers`, `/vendors`, `/labor`, `/reports`, `/plants`, and all other `/api/*` endpoints),
+ *      requiring an active authenticated session.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills user request: "Add a public, static page at /privacy in the ERP (no login required;
- *      make sure proxy.ts and any auth middleware allow this path)... Also make sure the site root (/)
- *      or a public /about page works as a homepage without login."
- *    - Eliminates Next.js 16 deprecation warning regarding the `middleware.ts` naming convention.
+ *    - Fulfills user request:
+ *      * "/" must redirect unauthenticated visitors to the login page, and redirect already-logged-in users to the dashboard.
+ *      * Move the current public landing page to /about (keep its content, just not at the root). Make /about and /privacy
+ *        the only public pages besides the login page.
+ *      * Make sure every other route, including /settings and all API routes except /api/cron/backup, requires login.
  * 
  * 3. WHAT WAS USED:
  *    - Next.js Edge routing contracts (`NextRequest`, `NextResponse`).
@@ -32,8 +34,8 @@
  *    - Route registry constants (`APP_ROUTES`).
  * 
  * 4. HOW IT WORKS:
- *    - Next.js 16 invokes `proxy(request)` on matched routes.
- *    - Evaluates the route against public whitelist rules before enforcing session token checks.
+ *    - Next.js 16 invokes `proxy(request)` on matched incoming requests.
+ *    - Evaluates request against static asset whitelists, public route paths, root routing rules, and session validity.
  * 
  * ----------------------------------------------------------------------------
  */
@@ -44,7 +46,6 @@ import {
   AUTH_SESSION_COOKIE,
   AUTH_TOKEN_COOKIE,
   AUTH_USER_COOKIE,
-  DEFAULT_AUTH_REDIRECT,
 } from '@/lib/constants/auth';
 import { APP_ROUTES } from '@/lib/constants/routes';
 
@@ -60,31 +61,31 @@ const PUBLIC_FILE_PREFIXES = [
   '/workbox-',
 ];
 
-// Public routes that are permanently accessible without authentication
+// Regex matching static public asset extensions
+const PUBLIC_STATIC_EXTENSIONS = /\.(png|jpg|jpeg|gif|svg|ico|webp|json|js|css|map|txt|webmanifest)$/i;
+
+// Public routes permanently accessible without user authentication
 const PUBLIC_ROUTES = [
-  '/privacy',
   '/about',
+  '/privacy',
   '/api/cron/backup',
 ];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Bypass public static assets and service worker scripts
+  // 1. Bypass public static assets, images, icons, and service worker scripts
   for (const prefix of PUBLIC_FILE_PREFIXES) {
     if (pathname.startsWith(prefix)) {
       return NextResponse.next();
     }
   }
 
-  // 2. Bypass public routes (Privacy Policy, About page, Cron API)
-  for (const route of PUBLIC_ROUTES) {
-    if (pathname === route || pathname.startsWith(`${route}/`)) {
-      return NextResponse.next();
-    }
+  if (PUBLIC_STATIC_EXTENSIONS.test(pathname)) {
+    return NextResponse.next();
   }
 
-  // 3. Resolve active session cookie across primary and fallback keys
+  // 2. Resolve active session cookie across primary and fallback keys
   const sessionToken =
     request.cookies.get(AUTH_SESSION_COOKIE)?.value ||
     request.cookies.get(AUTH_TOKEN_COOKIE)?.value ||
@@ -92,31 +93,43 @@ export function proxy(request: NextRequest) {
 
   const isAuthenticated = Boolean(sessionToken && sessionToken.trim() !== '');
 
-  // 4. Handle Login Route (/login)
-  if (pathname === APP_ROUTES.LOGIN || pathname === '/login') {
-    if (isAuthenticated) {
-      return NextResponse.redirect(new URL(DEFAULT_AUTH_REDIRECT, request.url));
-    }
-    return NextResponse.next();
-  }
-
-  // 5. Handle Root Landing Route (/)
-  // Allows both authenticated (Command Center) and unauthenticated (Public Nursery Homepage)
+  // 3. Handle Root Route (/)
+  // Unauthenticated visitors are redirected to /login; logged-in users to /dashboard
   if (pathname === '/') {
-    return NextResponse.next();
-  }
-
-  // 6. Handle Explicit Dashboard Route (/dashboard)
-  if (pathname === '/dashboard') {
     if (isAuthenticated) {
-      return NextResponse.next();
+      return NextResponse.redirect(new URL(APP_ROUTES.DASHBOARD, request.url));
     }
     return NextResponse.redirect(new URL(APP_ROUTES.LOGIN, request.url));
   }
 
-  // 7. Handle Protected Dashboard & Operational Routes
-  // (/pos, /reports, /customers, /inventory, /vendors, /contracts, /labor, /staff, /plants, /settings)
+  // 4. Handle Login Route (/login)
+  // Already authenticated users are redirected to /dashboard; guests view login form
+  if (pathname === APP_ROUTES.LOGIN || pathname === '/login') {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL(APP_ROUTES.DASHBOARD, request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 5. Bypass whitelisted public pages and cron route
+  // (/about, /privacy, and /api/cron/backup which is protected by CRON_SECRET bearer token)
+  for (const route of PUBLIC_ROUTES) {
+    if (pathname === route || pathname.startsWith(`${route}/`)) {
+      return NextResponse.next();
+    }
+  }
+
+  // 6. Handle all other routes (which strictly require authentication)
   if (!isAuthenticated) {
+    // Return 401 Unauthorized for API endpoints
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Authentication required.' },
+        { status: 401 }
+      );
+    }
+
+    // Redirect unauthenticated page requests to /login with redirect parameter
     const loginUrl = new URL(APP_ROUTES.LOGIN, request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
@@ -132,4 +145,3 @@ export const config = {
 };
 
 export default proxy;
-
