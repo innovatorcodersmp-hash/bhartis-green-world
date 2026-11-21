@@ -626,7 +626,7 @@ export const NurseryDashboard: React.FC<NurseryDashboardProps> = ({ initialData 
                 <button
                   type="button"
                   className={`${styles.alertActionBtn} ${styles.btnRestock}`}
-                  onClick={() => router.push(APP_ROUTES.INVENTORY_NEW)}
+                  onClick={() => router.push(`${APP_ROUTES.INVENTORY_NEW}?plantId=${item.id}`)}
                 >
                   + Order Batch
                 </button>

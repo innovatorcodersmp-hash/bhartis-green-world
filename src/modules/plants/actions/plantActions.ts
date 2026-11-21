@@ -166,14 +166,44 @@ export async function getPlantsAction(): Promise<ActionResult<Plant[]>> {
           not: 'ARCHIVED',
         },
       },
+      include: {
+        inventoryBatches: {
+          where: {
+            status: {
+              not: 'ARCHIVED',
+            },
+          },
+          select: {
+            currentQty: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
+    // Ensure stockCount reflects effective active batch stock, strictly matching dashboard calculations
+    const mappedPlants: Plant[] = plants.map((plant) => {
+      const batchStockSum = plant.inventoryBatches?.reduce(
+        (acc: number, b: { currentQty: number }) => acc + b.currentQty,
+        0
+      );
+      const effectiveStock =
+        typeof batchStockSum === 'number' && plant.inventoryBatches && plant.inventoryBatches.length > 0
+          ? batchStockSum
+          : plant.stockCount;
+
+      const { inventoryBatches, ...rest } = plant;
+      return {
+        ...rest,
+        stockCount: effectiveStock,
+      };
+    });
+
     return {
       success: true,
-      data: plants,
+      data: mappedPlants,
     };
   } catch (error) {
     console.error('[getPlantsAction Error]:', error);
@@ -201,6 +231,18 @@ export async function getPlantByIdAction(
 
     const plant = await prisma.plant.findUnique({
       where: { id },
+      include: {
+        inventoryBatches: {
+          where: {
+            status: {
+              not: 'ARCHIVED',
+            },
+          },
+          select: {
+            currentQty: true,
+          },
+        },
+      },
     });
 
     if (!plant || plant.status === 'ARCHIVED') {
@@ -211,9 +253,23 @@ export async function getPlantByIdAction(
       };
     }
 
+    const batchStockSum = plant.inventoryBatches?.reduce(
+      (acc: number, b: { currentQty: number }) => acc + b.currentQty,
+      0
+    );
+    const effectiveStock =
+      typeof batchStockSum === 'number' && plant.inventoryBatches && plant.inventoryBatches.length > 0
+        ? batchStockSum
+        : plant.stockCount;
+
+    const { inventoryBatches, ...rest } = plant;
+
     return {
       success: true,
-      data: plant,
+      data: {
+        ...rest,
+        stockCount: effectiveStock,
+      },
     };
   } catch (error) {
     console.error('[getPlantByIdAction Error]:', error);

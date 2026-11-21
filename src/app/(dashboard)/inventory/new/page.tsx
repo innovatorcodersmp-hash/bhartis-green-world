@@ -36,7 +36,14 @@ import { InventoryForm } from '@/modules/inventory/components';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewInventoryBatchPage() {
+interface NewInventoryBatchPageProps {
+  searchParams?: Promise<{ plantId?: string }>;
+}
+
+export default async function NewInventoryBatchPage(props: NewInventoryBatchPageProps) {
+  const resolvedSearchParams = props.searchParams ? await props.searchParams : {};
+  const initialPlantId = resolvedSearchParams.plantId;
+
   const [plantsResult, vendorsResult, batchCodeResult, existingCodesResult] = await Promise.all([
     getPlantsAction(),
     getVendorsAction(),
@@ -54,12 +61,15 @@ export default async function NewInventoryBatchPage() {
     : [];
 
   return (
-    <InventoryForm
-      mode="create"
-      plants={plants}
-      vendors={vendors}
-      initialBatchCode={initialBatchCode}
-      existingBatchCodes={existingBatchCodes}
-    />
+    <React.Suspense fallback={null}>
+      <InventoryForm
+        mode="create"
+        plants={plants}
+        vendors={vendors}
+        initialBatchCode={initialBatchCode}
+        existingBatchCodes={existingBatchCodes}
+        initialPlantId={initialPlantId}
+      />
+    </React.Suspense>
   );
 }

@@ -47,8 +47,8 @@
 
 'use client';
 
-import React, { useState, useEffect, useTransition, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useTransition, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Sprout, Plus, Trash2, Save, X, AlertCircle, Calendar } from 'lucide-react';
 import { Input, Button, SearchableSelect } from '@/components/ui';
 import { useSetPageHeader } from '@/components/layout';
@@ -84,6 +84,7 @@ export interface InventoryFormProps {
   vendors: Vendor[];
   initialBatchCode?: string;
   existingBatchCodes?: string[];
+  initialPlantId?: string;
 }
 
 export const InventoryForm: React.FC<InventoryFormProps> = ({
@@ -93,9 +94,13 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   vendors,
   initialBatchCode,
   existingBatchCodes = [],
+  initialPlantId: initialPlantIdProp,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialPlantId = initialPlantIdProp || searchParams.get('plantId') || '';
   const [isPending, startTransition] = useTransition();
+  const firstRowQtyRef = useRef<HTMLInputElement>(null);
 
   useSetPageHeader({
     title: mode === 'edit' ? `Edit Batch: ${initialData?.batchNumber || ''}` : 'Log New Sapling Batch',
@@ -141,10 +146,16 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
         },
       ];
     }
+
+    const preselectedPlant =
+      initialPlantId && plants.some((p) => p.id === initialPlantId)
+        ? initialPlantId
+        : '';
+
     return [
       {
         id: `row-${Date.now()}-1`,
-        plantId: '',
+        plantId: preselectedPlant,
         initialQty: '',
         unitCostPrice: '',
         mortalityQty: 0,
@@ -152,6 +163,33 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
       },
     ];
   });
+
+  // Sync initialPlantId into the first plant line-item if plants list loads or initialPlantId updates
+  useEffect(() => {
+    if (mode === 'create' && initialPlantId && plants.some((p) => p.id === initialPlantId)) {
+      setPlantItems((prev) => {
+        if (prev.length > 0 && (!prev[0].plantId || prev[0].plantId !== initialPlantId)) {
+          const updated = [...prev];
+          updated[0] = {
+            ...updated[0],
+            plantId: initialPlantId,
+          };
+          return updated;
+        }
+        return prev;
+      });
+    }
+  }, [initialPlantId, plants, mode]);
+
+  // Auto-focus Total Received Pots on first row when initialPlantId is pre-selected
+  useEffect(() => {
+    if (initialPlantId && firstRowQtyRef.current) {
+      const timer = setTimeout(() => {
+        firstRowQtyRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [initialPlantId]);
 
   // 3. Validation and Error Messages
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -508,6 +546,8 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
                 {/* 1. Total Received Pots */}
                 <div>
                   <Input
+                    ref={idx === 0 ? firstRowQtyRef : undefined}
+                    autoFocus={Boolean(initialPlantId && idx === 0)}
                     label="Total Received Pots (एकूण आलेली झाडे)"
                     type="number"
                     min="1"
