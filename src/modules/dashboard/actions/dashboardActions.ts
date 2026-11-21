@@ -84,6 +84,16 @@ export async function getNurseryDashboardMetricsAction(): Promise<
             not: 'ARCHIVED',
           },
         },
+        include: {
+          inventoryBatches: {
+            where: {
+              status: { not: 'ARCHIVED' },
+            },
+            select: {
+              currentQty: true,
+            },
+          },
+        },
         orderBy: {
           stockCount: 'asc',
         },
@@ -262,18 +272,28 @@ export async function getNurseryDashboardMetricsAction(): Promise<
     const lowStockAlerts: LowStockAlertItem[] = [];
 
     for (const plant of plants) {
+      // Calculate effective stock: direct synced stockCount or dynamic sum of active batches
+      const batchStockSum = plant.inventoryBatches?.reduce(
+        (acc: number, b: { currentQty: number }) => acc + b.currentQty,
+        0
+      );
+      const effectiveStock =
+        typeof batchStockSum === 'number' && plant.inventoryBatches && plant.inventoryBatches.length > 0
+          ? batchStockSum
+          : plant.stockCount;
+
       // Clamp negative stock counts to zero
-      const readyPots = Math.max(0, plant.stockCount);
+      const readyPots = Math.max(0, effectiveStock);
       totalReadyPots += readyPots;
 
-      if (plant.stockCount <= 10) {
+      if (effectiveStock <= 10) {
         lowStockAlerts.push({
           id: plant.id,
           sku: plant.sku,
           name: plant.name,
           marathiName: plant.marathiName,
           category: plant.category,
-          stockCount: plant.stockCount,
+          stockCount: effectiveStock,
           price: plant.price,
           costPrice: plant.costPrice,
           polyhouseNo: plant.polyhouseNo,

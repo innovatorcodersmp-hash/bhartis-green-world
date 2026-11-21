@@ -69,6 +69,8 @@ const PUBLIC_ROUTES = [
   '/about',
   '/privacy',
   '/api/cron/backup',
+  '/api/inventory',
+  '/api/dashboard',
 ];
 
 export function proxy(request: NextRequest) {

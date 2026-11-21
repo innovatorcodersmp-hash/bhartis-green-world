@@ -163,7 +163,7 @@ model Vendor {
 /// Inventory batch tracking procurement arrivals, nursery mortality, and active stock
 model InventoryBatch {
   id                String             @id @default(uuid())
-  batchNumber       String             @unique // Batch code (e.g., BATCH-2026-001)
+  batchNumber       String             // Shared batch consignment code (e.g., BGW-BAT-2026-0018)
   plantId           String
   plant             Plant              @relation(fields: [plantId], references: [id])
   vendorId          String?
@@ -180,6 +180,7 @@ model InventoryBatch {
   updatedAt         DateTime           @updatedAt
 
   // Indexes
+  @@index([batchNumber])
   @@index([plantId])
   @@index([vendorId])
   @@index([status])

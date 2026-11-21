@@ -73,8 +73,11 @@ export const InventoryListModule: React.FC<InventoryListModuleProps> = ({ batche
     const mortalityRate =
       initialTotal > 0 ? (mortalityTotal / initialTotal) * 100 : 0;
 
+    const distinctBatches = new Set(batches.map((b) => b.batchNumber)).size;
+
     return {
       totalBatches: batches.length,
+      distinctConsignments: distinctBatches,
       activeStockUnits: activeStock,
       totalMortality: mortalityTotal,
       mortalityRatePercent: mortalityRate,
@@ -103,7 +106,11 @@ export const InventoryListModule: React.FC<InventoryListModuleProps> = ({ batche
       >
         <MetricCard
           label="Total Sapling Batches"
-          value={metrics.totalBatches}
+          value={
+            metrics.distinctConsignments !== metrics.totalBatches && metrics.distinctConsignments > 0
+              ? `${metrics.distinctConsignments} (${metrics.totalBatches} varieties)`
+              : metrics.totalBatches
+          }
           icon={<Layers size={14} />}
           variant="cornflower"
         />

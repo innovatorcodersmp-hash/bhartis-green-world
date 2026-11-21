@@ -47,11 +47,42 @@ import {
   InventoryBatchWithRelations,
   InventoryBatchInput,
   InventoryBatchInputSchema,
+  BatchConsignmentInput,
+  BatchConsignmentInputSchema,
+  BatchPlantItemInput,
 } from '../types';
 
 // ============================================================================
 // 1. UTILITY: AUTO-GENERATE CONCURRENCY-SAFE SEQUENTIAL BATCH CODE (BGW-BAT-YYYY-XXXX)
 // ============================================================================
+
+/**
+ * Synchronizes the parent Plant stockCount from the sum of currentQty across all active batches.
+ */
+export async function syncPlantStockCount(txOrPrisma: any, plantId: string): Promise<number> {
+  const aggregate = await txOrPrisma.inventoryBatch.aggregate({
+    where: {
+      plantId,
+      status: {
+        not: 'ARCHIVED',
+      },
+    },
+    _sum: {
+      currentQty: true,
+    },
+  });
+
+  const totalStock = aggregate._sum.currentQty ?? 0;
+
+  await txOrPrisma.plant.update({
+    where: { id: plantId },
+    data: {
+      stockCount: totalStock,
+    },
+  });
+
+  return totalStock;
+}
 
 /**
  * Extracts the highest sequence number from existing batches for the current year
@@ -135,7 +166,7 @@ export async function generateNextBatchCode(
 
   // 5. Guarantee absolute uniqueness against race conditions
   let counter = nextSeq;
-  while (await txOrPrisma.inventoryBatch.findUnique({ where: { batchNumber: candidateBatchNumber } })) {
+  while (await txOrPrisma.inventoryBatch.findFirst({ where: { batchNumber: candidateBatchNumber } })) {
     counter++;
     candidateBatchNumber = `${prefix}${String(counter).padStart(4, '0')}`;
   }
@@ -159,6 +190,41 @@ export async function getNextBatchCodeAction(): Promise<ActionResult<string>> {
     return {
       success: false,
       error: 'Failed to generate sequential batch tracking code.',
+    };
+  }
+}
+
+// ============================================================================
+// 2B. QUERY: FETCH EXISTING ACTIVE BATCH CODES FOR RE-USE / APPENDING
+// ============================================================================
+
+export async function getExistingBatchCodesAction(): Promise<ActionResult<string[]>> {
+  try {
+    const batches = await prisma.inventoryBatch.findMany({
+      where: {
+        status: {
+          not: 'ARCHIVED',
+        },
+      },
+      select: {
+        batchNumber: true,
+      },
+      distinct: ['batchNumber'],
+      orderBy: {
+        purchaseDate: 'desc',
+      },
+    });
+
+    return {
+      success: true,
+      data: batches.map((b) => b.batchNumber),
+    };
+  } catch (error) {
+    console.error('[getExistingBatchCodesAction Error]:', error);
+    return {
+      success: false,
+      error: 'Failed to retrieve existing batch codes.',
+      data: [],
     };
   }
 }
@@ -244,14 +310,13 @@ export async function getInventoryBatchByIdAction(
 }
 
 // ============================================================================
-// 5. MUTATION: CREATE NEW INVENTORY BATCH RECORD
+// 5. MUTATION: CREATE NEW MULTI-PLANT INVENTORY BATCH CONSIGNMENT
 // ============================================================================
 
-export async function createInventoryBatchAction(
-  rawData: InventoryBatchInput
-): Promise<ActionResult<InventoryBatchWithRelations>> {
+export async function createBatchConsignmentAction(
+  rawData: BatchConsignmentInput
+): Promise<ActionResult<InventoryBatchWithRelations[]>> {
   try {
-    // 1. Auto-generate sequential batch code if empty
     let candidateBatchCode = rawData.batchNumber?.trim();
     if (!candidateBatchCode) {
       candidateBatchCode = await generateNextBatchCode(prisma);
@@ -262,7 +327,114 @@ export async function createInventoryBatchAction(
       batchNumber: candidateBatchCode,
     };
 
-    // 2. Validate payload with Zod
+    const validationResult = BatchConsignmentInputSchema.safeParse(normalizedData);
+    if (!validationResult.success) {
+      const fieldErrors = validationResult.error.flatten().fieldErrors;
+      const firstErrorMessage =
+        Object.values(fieldErrors).flat()[0] || 'Invalid consignment batch details provided.';
+
+      return {
+        success: false,
+        error: firstErrorMessage,
+        fieldErrors,
+      };
+    }
+
+    const data = validationResult.data;
+    const finalBatchNumber = data.batchNumber;
+    const purchaseDate = new Date(data.purchaseDate);
+    const vendorId = data.vendorId ? data.vendorId : null;
+
+    const createdBatches = await prisma.$transaction(async (tx) => {
+      const results: InventoryBatchWithRelations[] = [];
+      const affectedPlantIds = new Set<string>();
+
+      for (const item of data.items) {
+        const batch = await tx.inventoryBatch.create({
+          data: {
+            batchNumber: finalBatchNumber,
+            plantId: item.plantId,
+            vendorId,
+            initialQty: item.initialQty,
+            currentQty: item.currentQty,
+            mortalityQty: item.mortalityQty ?? 0,
+            unitCostPrice: item.unitCostPrice !== undefined ? item.unitCostPrice : null,
+            purchaseDate,
+            status: 'ACTIVE',
+          },
+          include: {
+            plant: true,
+            vendor: true,
+          },
+        });
+
+        results.push(batch);
+        affectedPlantIds.add(item.plantId);
+      }
+
+      // Recalculate stock for all affected plants inside the same atomic transaction
+      for (const plantId of affectedPlantIds) {
+        await syncPlantStockCount(tx, plantId);
+      }
+
+      return results;
+    });
+
+    revalidatePath(APP_ROUTES.INVENTORY);
+    revalidatePath(APP_ROUTES.PLANTS);
+    revalidatePath(APP_ROUTES.DASHBOARD);
+    revalidatePath('/dashboard');
+    revalidatePath('/plants');
+
+    return {
+      success: true,
+      data: createdBatches,
+    };
+  } catch (error: any) {
+    console.error('[createBatchConsignmentAction Error]:', error);
+    return {
+      success: false,
+      error: error?.message || 'Failed to register consignment batch due to a server error.',
+    };
+  }
+}
+
+// ============================================================================
+// 5B. MUTATION: CREATE SINGLE INVENTORY BATCH OR DELEGATE TO CONSIGNMENT
+// ============================================================================
+
+export async function createInventoryBatchAction(
+  rawData: InventoryBatchInput | BatchConsignmentInput | any
+): Promise<ActionResult<InventoryBatchWithRelations>> {
+  try {
+    // If incoming data contains an items array, delegate to multi-plant consignment action
+    if (rawData && Array.isArray(rawData.items)) {
+      const consignmentResult = await createBatchConsignmentAction(rawData as BatchConsignmentInput);
+      if (!consignmentResult.success || !consignmentResult.data || consignmentResult.data.length === 0) {
+        return {
+          success: false,
+          error: consignmentResult.error || 'Failed to create consignment batch.',
+          fieldErrors: consignmentResult.fieldErrors,
+        };
+      }
+
+      return {
+        success: true,
+        data: consignmentResult.data[0],
+      };
+    }
+
+    // Single batch record creation
+    let candidateBatchCode = rawData.batchNumber?.trim();
+    if (!candidateBatchCode) {
+      candidateBatchCode = await generateNextBatchCode(prisma);
+    }
+
+    const normalizedData = {
+      ...rawData,
+      batchNumber: candidateBatchCode,
+    };
+
     const validationResult = InventoryBatchInputSchema.safeParse(normalizedData);
     if (!validationResult.success) {
       const fieldErrors = validationResult.error.flatten().fieldErrors;
@@ -278,22 +450,10 @@ export async function createInventoryBatchAction(
 
     const data = validationResult.data;
 
-    // 3. Concurrency-safe atomic transaction
     const newBatch = await prisma.$transaction(async (tx) => {
-      let finalBatchNumber = data.batchNumber;
-
-      // Verify uniqueness inside transaction
-      const existingBatch = await tx.inventoryBatch.findUnique({
-        where: { batchNumber: finalBatchNumber },
-      });
-
-      if (existingBatch) {
-        finalBatchNumber = await generateNextBatchCode(tx);
-      }
-
-      return tx.inventoryBatch.create({
+      const created = await tx.inventoryBatch.create({
         data: {
-          batchNumber: finalBatchNumber,
+          batchNumber: data.batchNumber,
           plantId: data.plantId,
           vendorId: data.vendorId ? data.vendorId : null,
           initialQty: data.initialQty,
@@ -308,11 +468,16 @@ export async function createInventoryBatchAction(
           vendor: true,
         },
       });
+
+      await syncPlantStockCount(tx, data.plantId);
+      return created;
     });
 
-    // 4. Revalidate cache
     revalidatePath(APP_ROUTES.INVENTORY);
     revalidatePath(APP_ROUTES.PLANTS);
+    revalidatePath(APP_ROUTES.DASHBOARD);
+    revalidatePath('/dashboard');
+    revalidatePath('/plants');
 
     return {
       success: true,
@@ -359,68 +524,62 @@ export async function updateInventoryBatchAction(
 
     const data = validationResult.data;
 
-    // 2. Verify existence
-    const existing = await prisma.inventoryBatch.findUnique({
-      where: { id },
-    });
-
-    if (!existing || existing.status === 'ARCHIVED') {
-      return {
-        success: false,
-        error: 'Inventory batch record does not exist or has been removed.',
-      };
-    }
-
-    // 3. Check for batch code collision if changed
-    if (data.batchNumber !== existing.batchNumber) {
-      const duplicate = await prisma.inventoryBatch.findUnique({
-        where: { batchNumber: data.batchNumber },
+    // 2. Wrap update and stock recalculation in atomic transaction
+    const updatedBatch = await prisma.$transaction(async (tx) => {
+      const existing = await tx.inventoryBatch.findUnique({
+        where: { id },
       });
 
-      if (duplicate && duplicate.id !== id) {
-        return {
-          success: false,
-          error: `Batch Number '${data.batchNumber}' is already assigned to another batch.`,
-          fieldErrors: {
-            batchNumber: [`Batch code '${data.batchNumber}' belongs to another record.`],
-          },
-        };
+      if (!existing || existing.status === 'ARCHIVED') {
+        throw new Error('Inventory batch record does not exist or has been removed.');
       }
-    }
 
-    // 4. Persist update via Prisma ORM
-    const updatedBatch = await prisma.inventoryBatch.update({
-      where: { id },
-      data: {
-        batchNumber: data.batchNumber,
-        plantId: data.plantId,
-        vendorId: data.vendorId ? data.vendorId : null,
-        initialQty: data.initialQty,
-        currentQty: data.currentQty,
-        mortalityQty: data.mortalityQty,
-        unitCostPrice: data.unitCostPrice !== undefined ? data.unitCostPrice : null,
-        purchaseDate: new Date(data.purchaseDate),
-      },
-      include: {
-        plant: true,
-        vendor: true,
-      },
+      const updated = await tx.inventoryBatch.update({
+        where: { id },
+        data: {
+          batchNumber: data.batchNumber,
+          plantId: data.plantId,
+          vendorId: data.vendorId ? data.vendorId : null,
+          initialQty: data.initialQty,
+          currentQty: data.currentQty,
+          mortalityQty: data.mortalityQty,
+          unitCostPrice: data.unitCostPrice !== undefined ? data.unitCostPrice : null,
+          purchaseDate: new Date(data.purchaseDate),
+        },
+        include: {
+          plant: true,
+          vendor: true,
+        },
+      });
+
+      // Recalculate parent Plant stock directly from sum of currentQty across active batches
+      await syncPlantStockCount(tx, data.plantId);
+
+      // If plant association changed, recalculate previous plant's stock as well
+      if (existing.plantId !== data.plantId) {
+        await syncPlantStockCount(tx, existing.plantId);
+      }
+
+      return updated;
     });
 
-    // 5. Revalidate cache paths
+    // 3. Revalidate cache paths
     revalidatePath(APP_ROUTES.INVENTORY);
     revalidatePath(APP_ROUTES.INVENTORY_EDIT(id));
     revalidatePath(APP_ROUTES.PLANTS);
+    revalidatePath(APP_ROUTES.DASHBOARD);
+    revalidatePath('/dashboard');
+    revalidatePath('/plants');
 
     return {
       success: true,
       data: updatedBatch,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[updateInventoryBatchAction Error]:', error);
     return {
       success: false,
-      error: 'Failed to update inventory batch details. Please try again.',
+      error: error?.message || 'Failed to update inventory batch details. Please try again.',
     };
   }
 }
@@ -440,15 +599,29 @@ export async function deleteInventoryBatchAction(
       };
     }
 
-    await prisma.inventoryBatch.update({
-      where: { id },
-      data: {
-        status: 'ARCHIVED',
-      },
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.inventoryBatch.findUnique({
+        where: { id },
+        select: { plantId: true },
+      });
+
+      await tx.inventoryBatch.update({
+        where: { id },
+        data: {
+          status: 'ARCHIVED',
+        },
+      });
+
+      if (existing?.plantId) {
+        await syncPlantStockCount(tx, existing.plantId);
+      }
     });
 
     revalidatePath(APP_ROUTES.INVENTORY);
     revalidatePath(APP_ROUTES.PLANTS);
+    revalidatePath(APP_ROUTES.DASHBOARD);
+    revalidatePath('/dashboard');
+    revalidatePath('/plants');
 
     return {
       success: true,

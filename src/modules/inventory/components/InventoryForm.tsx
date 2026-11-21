@@ -8,31 +8,39 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Re-engineered `<InventoryForm>` into an ultra-compact UI card layout minimizing vertical screen height.
- *    - Replaced the large 3-card summary block with a sleek, single-line horizontal ribbon (`.summaryRibbon`):
- *      `Total Investment: ₹X,XXX | Ready to Sell: X Pots | Damaged Loss: ₹X`.
- *    - Reduced card padding, field margins, and grid gaps across the 2-column rows to eliminate excess scrolling.
- *    - Preserved the "Unit Purchase Cost (₹ per pot)" input and clean empty initialization in Create mode.
- *    - Automated "Batch Code / Number" with sequential codes (`BGW-BAT-YYYY-XXXX`) rendered in read-only monospace style.
- *    - Positioned "Cancel" and "Save Batch" buttons cleanly inside the card footer with 44px minimum touch targets.
+ *    - Upgraded `<InventoryForm>` to support multi-plant repeater consignment logging under a single shared batch code.
+ *    - Implemented shared consignment header entered once:
+ *      * Batch Code / Number (prefilled with next auto-generated code, with datalist / selection of existing batch codes).
+ *      * Purchase / Arrival Date *.
+ *      * Supplying Vendor (Optional).
+ *    - Implemented dynamic plant line-item repeater:
+ *      * Starts with 1 plant row; clean `+ Add Another Plant` button to add unlimited varieties.
+ *      * Each plant entry row features: Plant Cultivar *, Total Received Pots *, Unit Purchase Cost,
+ *        Damaged / Dead Pots, and Ready to Sell Stock * (auto-calculated as Received - Damaged with manual override).
+ *      * Delete row action icon displayed when > 1 plant entry row exists.
+ *      * Strictly eliminates all `e.g.` helper clutter.
+ *      * Disables mouse-wheel numeric incrementing (`onWheel={(e) => e.currentTarget.blur()}`) on all number fields.
+ *    - Built live-calculating combined summary footer:
+ *      * `Total Plants / Varieties: X`
+ *      * `Total Investment: ₹X,XXX`
+ *      * `Total Ready to Sell: X Pots`
+ *    - Preserved single-batch editing mode (`mode === 'edit'`) for individual batch audits and mortality adjustments.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills user request: "TASK: ULTRA-COMPACT REDESIGN FOR INVENTORY BATCH FORM AND FINANCIAL SUMMARY".
- *    - Fulfills Specification 01: Clean, tight form standards & compact viewport ergonomics.
- *    - Allows nursery supervisors and counter billing staff to view the entire batch form and financial metrics
- *      on a single screen without vertical scrolling fatigue.
+ *    - Fulfills User Request: "Multi-Plant Repeater UI in InventoryForm.tsx".
+ *    - Eliminates repetitive batch number entry when receiving multi-variety truck consignments at the Kolhapur nursery.
  * 
  * 3. WHAT WAS USED:
  *    - React client hooks (`useState`, `useEffect`, `useTransition`, `useMemo`).
- *    - Next.js `useRouter`.
- *    - Server Actions (`createInventoryBatchAction`, `updateInventoryBatchAction`, `deleteInventoryBatchAction`, `getNextBatchCodeAction`).
- *    - Shared UI primitives (`@/components/ui`: `<Input>`, `<SearchableSelect>`, `<Button>`).
- *    - Centralized route constants (`APP_ROUTES`).
+ *    - Lucide React icons (`Sprout`, `Plus`, `Trash2`, `Save`, `X`, `AlertCircle`, `Calendar`, `DollarSign`, `Layers`).
+ *    - Shared UI primitives (`<Input>`, `<SearchableSelect>`, `<Button>`).
+ *    - Server Actions (`createBatchConsignmentAction`, `updateInventoryBatchAction`, `deleteInventoryBatchAction`).
  * 
  * 4. HOW IT WORKS:
- *    - Mounts within a compact centered card; arranges 8 form fields across 4 tight rows;
- *      dynamically computes and displays the single-line summary ribbon;
- *      validates inputs upon submission; commits via Server Action; and redirects to `/inventory`.
+ *    - Maintains shared consignment state and an array of plant item rows;
+ *    - Auto-computes ready stock as received and mortality quantities change;
+ *    - Submits multi-item array atomically via Server Actions;
+ *    - Recalculates stock across all affected plant records and navigates back to `/inventory`.
  * 
  * ----------------------------------------------------------------------------
  */
@@ -41,23 +49,33 @@
 
 import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Save, X, Trash2, Calendar } from 'lucide-react';
+import { Sprout, Plus, Trash2, Save, X, AlertCircle, Calendar } from 'lucide-react';
 import { Input, Button, SearchableSelect } from '@/components/ui';
 import { useSetPageHeader } from '@/components/layout';
 import { APP_ROUTES } from '@/lib/constants/routes';
 import {
   InventoryBatchWithRelations,
-  InventoryBatchInput,
   Plant,
   Vendor,
+  BatchPlantItemInput,
+  BatchConsignmentInput,
+  InventoryBatchInput,
 } from '../types';
 import {
-  createInventoryBatchAction,
+  createBatchConsignmentAction,
   updateInventoryBatchAction,
   deleteInventoryBatchAction,
-  getNextBatchCodeAction,
 } from '../actions';
 import styles from './InventoryForm.module.scss';
+
+export interface PlantRowItem {
+  id: string; // Internal unique row ID for stable React rendering
+  plantId: string;
+  initialQty: number | '';
+  unitCostPrice: number | '';
+  mortalityQty: number | '';
+  currentQty: number | '';
+}
 
 export interface InventoryFormProps {
   initialData?: InventoryBatchWithRelations | null;
@@ -65,17 +83,7 @@ export interface InventoryFormProps {
   plants: Plant[];
   vendors: Vendor[];
   initialBatchCode?: string;
-}
-
-export interface InventoryFormState {
-  batchNumber: string;
-  plantId: string;
-  vendorId?: string;
-  initialQty: number | '';
-  currentQty: number | '';
-  mortalityQty: number | '';
-  unitCostPrice: number | '';
-  purchaseDate: string;
+  existingBatchCodes?: string[];
 }
 
 export const InventoryForm: React.FC<InventoryFormProps> = ({
@@ -84,6 +92,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   plants,
   vendors,
   initialBatchCode,
+  existingBatchCodes = [],
 }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -93,267 +102,254 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     subtitle:
       mode === 'edit'
         ? `Update stock levels, unit cost, and mortality audits for batch: ${initialData?.batchNumber || ''}`
-        : 'Register a new sapling procurement batch or internal propagation lot.',
+        : 'Register nursery sapling procurement consignments and internal propagation batches.',
   });
 
-  // Map plants to select options
+  // 1. Shared Consignment Header State
+  const [batchNumber, setBatchNumber] = useState<string>(
+    initialData?.batchNumber || initialBatchCode || ''
+  );
+  const [purchaseDate, setPurchaseDate] = useState<string>(
+    initialData?.purchaseDate
+      ? new Date(initialData.purchaseDate).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10)
+  );
+  const [vendorId, setVendorId] = useState<string>(
+    initialData?.vendorId || ''
+  );
+
+  // Sync batch number if prefill arrives late
+  useEffect(() => {
+    if (mode === 'create' && initialBatchCode && !batchNumber) {
+      setBatchNumber(initialBatchCode);
+    }
+  }, [initialBatchCode, mode, batchNumber]);
+
+  // 2. Repeatable Plant Line-Items State
+  const [plantItems, setPlantItems] = useState<PlantRowItem[]>(() => {
+    if (initialData) {
+      return [
+        {
+          id: initialData.id,
+          plantId: initialData.plantId,
+          initialQty: initialData.initialQty,
+          unitCostPrice: initialData.unitCostPrice !== null && initialData.unitCostPrice !== undefined
+            ? initialData.unitCostPrice
+            : '',
+          mortalityQty: initialData.mortalityQty,
+          currentQty: initialData.currentQty,
+        },
+      ];
+    }
+    return [
+      {
+        id: `row-${Date.now()}-1`,
+        plantId: '',
+        initialQty: '',
+        unitCostPrice: '',
+        mortalityQty: 0,
+        currentQty: '',
+      },
+    ];
+  });
+
+  // 3. Validation and Error Messages
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // Map plants to SearchableSelect options
   const plantOptions = useMemo(
     () =>
       plants.map((p) => ({
         value: p.id,
-        label: `${p.sku} - ${p.name}`,
-        subLabel: p.marathiName || undefined,
+        label: p.marathiName ? `${p.name} (${p.marathiName})` : p.name,
+        subLabel: `SKU: ${p.sku} • Stock: ${p.stockCount} pots • ₹${p.price}`,
       })),
     [plants]
   );
 
-  // Map vendors to select options
+  // Map vendors to SearchableSelect options
   const vendorOptions = useMemo(
-    () =>
-      vendors.map((v) => ({
+    () => [
+      { value: '', label: 'Internal Propagation / In-House Lot' },
+      ...vendors.map((v) => ({
         value: v.id,
         label: v.name,
-        subLabel: v.phone,
+        subLabel: `${v.category} • ${v.phone}`,
       })),
+    ],
     [vendors]
   );
 
-  const formattedDate = initialData?.purchaseDate
-    ? new Date(initialData.purchaseDate).toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0];
-
-  const [formData, setFormData] = useState<InventoryFormState>({
-    batchNumber: initialData?.batchNumber || initialBatchCode || '',
-    plantId: initialData?.plantId || (plants[0]?.id || ''),
-    vendorId: initialData?.vendorId || '',
-    initialQty: initialData?.initialQty !== undefined ? initialData.initialQty : '',
-    currentQty: initialData?.currentQty !== undefined ? initialData.currentQty : '',
-    mortalityQty: initialData?.mortalityQty !== undefined ? initialData.mortalityQty : '',
-    unitCostPrice:
-      initialData?.unitCostPrice !== null && initialData?.unitCostPrice !== undefined
-        ? initialData.unitCostPrice
-        : '',
-    purchaseDate: formattedDate,
-  });
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-
-  // Pre-fill next sequential batch code on form load if in create mode
-  useEffect(() => {
-    if (mode === 'create' && !initialData && !formData.batchNumber) {
-      if (initialBatchCode) {
-        setFormData((prev) => ({ ...prev, batchNumber: initialBatchCode }));
-      } else {
-        getNextBatchCodeAction().then((result) => {
-          if (result.success && result.data) {
-            setFormData((prev) => ({
-              ...prev,
-              batchNumber: result.data || `BGW-BAT-${new Date().getFullYear()}-0001`,
-            }));
-          }
-        });
-      }
-    }
-  }, [mode, initialData, formData.batchNumber, initialBatchCode]);
-
-  const handleChange = (field: keyof InventoryFormState, value: string | number) => {
-    setFormData((prev) => ({
+  // Handle adding another plant variety row
+  const handleAddPlantRow = () => {
+    setPlantItems((prev) => [
       ...prev,
-      [field]: value,
-    }));
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-    }
-  };
-
-  // Automatically recalculate Ready to Sell Stock when Total Received changes
-  const handleInitialQtyChange = (valStr: string) => {
-    if (valStr === '') {
-      setFormData((prev) => ({
-        ...prev,
+      {
+        id: `row-${Date.now()}-${prev.length + 1}`,
+        plantId: '',
         initialQty: '',
-        currentQty: '',
-      }));
-      return;
-    }
-
-    const val = parseInt(valStr, 10);
-    const parsedInitial = isNaN(val) ? 0 : val;
-
-    setFormData((prev) => {
-      const mortality = typeof prev.mortalityQty === 'number' ? prev.mortalityQty : 0;
-      const autoCurrent = Math.max(0, parsedInitial - mortality);
-      return {
-        ...prev,
-        initialQty: parsedInitial,
-        currentQty: autoCurrent,
-      };
-    });
-
-    if (fieldErrors.initialQty || fieldErrors.currentQty) {
-      setFieldErrors((prev) => {
-        const updated = { ...prev };
-        delete updated.initialQty;
-        delete updated.currentQty;
-        return updated;
-      });
-    }
-  };
-
-  // Automatically recalculate Ready to Sell Stock when Damaged Pots changes
-  const handleMortalityQtyChange = (valStr: string) => {
-    if (valStr === '') {
-      setFormData((prev) => {
-        const initial = typeof prev.initialQty === 'number' ? prev.initialQty : '';
-        return {
-          ...prev,
-          mortalityQty: '',
-          currentQty: initial,
-        };
-      });
-      return;
-    }
-
-    const val = parseInt(valStr, 10);
-    const parsedMortality = isNaN(val) ? 0 : val;
-
-    setFormData((prev) => {
-      const initial = typeof prev.initialQty === 'number' ? prev.initialQty : 0;
-      const autoCurrent = Math.max(0, initial - parsedMortality);
-      return {
-        ...prev,
-        mortalityQty: parsedMortality,
-        currentQty: typeof prev.initialQty === 'number' ? autoCurrent : '',
-      };
-    });
-
-    if (fieldErrors.mortalityQty || fieldErrors.currentQty) {
-      setFieldErrors((prev) => {
-        const updated = { ...prev };
-        delete updated.mortalityQty;
-        delete updated.currentQty;
-        return updated;
-      });
-    }
-  };
-
-  // Handle Unit Purchase Cost changes
-  const handleUnitCostChange = (valStr: string) => {
-    if (valStr === '') {
-      setFormData((prev) => ({
-        ...prev,
         unitCostPrice: '',
-      }));
-      return;
-    }
-
-    const val = parseFloat(valStr);
-    const parsedCost = isNaN(val) ? '' : val;
-
-    setFormData((prev) => ({
-      ...prev,
-      unitCostPrice: parsedCost,
-    }));
-
-    if (fieldErrors.unitCostPrice) {
-      setFieldErrors((prev) => {
-        const updated = { ...prev };
-        delete updated.unitCostPrice;
-        return updated;
-      });
-    }
-  };
-
-  // Allow manual adjustment of Ready to Sell Stock if needed
-  const handleCurrentQtyChange = (valStr: string) => {
-    if (valStr === '') {
-      setFormData((prev) => ({
-        ...prev,
+        mortalityQty: 0,
         currentQty: '',
-      }));
-      return;
-    }
-
-    const val = parseInt(valStr, 10);
-    const parsedCurrent = isNaN(val) ? 0 : val;
-
-    setFormData((prev) => ({
-      ...prev,
-      currentQty: parsedCurrent,
-    }));
-
-    if (fieldErrors.currentQty) {
-      setFieldErrors((prev) => {
-        const updated = { ...prev };
-        delete updated.currentQty;
-        return updated;
-      });
-    }
+      },
+    ]);
   };
 
+  // Handle removing a plant variety row
+  const handleRemovePlantRow = (rowId: string) => {
+    if (plantItems.length <= 1) return;
+    setPlantItems((prev) => prev.filter((r) => r.id !== rowId));
+  };
+
+  // Handle plant line-item field changes
+  const updatePlantRow = (rowId: string, updates: Partial<PlantRowItem>) => {
+    setPlantItems((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId) return row;
+
+        const updated = { ...row, ...updates };
+
+        // Auto-calculate currentQty when initialQty or mortalityQty changes
+        if ('initialQty' in updates || 'mortalityQty' in updates) {
+          const init = typeof updated.initialQty === 'number' ? updated.initialQty : 0;
+          const mort = typeof updated.mortalityQty === 'number' ? updated.mortalityQty : 0;
+          if (updated.initialQty !== '') {
+            updated.currentQty = Math.max(0, init - mort);
+          }
+        }
+
+        return updated;
+      })
+    );
+  };
+
+  // 4. Combined Live Summary Footer Calculation
+  const summary = useMemo(() => {
+    let totalVarieties = 0;
+    let totalInvestment = 0;
+    let totalReady = 0;
+    let totalDamaged = 0;
+
+    for (const item of plantItems) {
+      if (item.plantId) totalVarieties++;
+      const init = typeof item.initialQty === 'number' ? item.initialQty : 0;
+      const curr = typeof item.currentQty === 'number' ? item.currentQty : 0;
+      const mort = typeof item.mortalityQty === 'number' ? item.mortalityQty : 0;
+      const cost = typeof item.unitCostPrice === 'number' ? item.unitCostPrice : 0;
+
+      totalInvestment += init * cost;
+      totalReady += curr;
+      totalDamaged += mort;
+    }
+
+    return {
+      totalVarieties,
+      totalInvestment,
+      totalReady,
+      totalDamaged,
+    };
+  }, [plantItems]);
+
+  // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setFieldErrors({});
 
-    // Client-side required numerical validations
-    if (formData.initialQty === '' || isNaN(Number(formData.initialQty)) || Number(formData.initialQty) < 1) {
-      setErrorMessage('Please enter the total received pots (must be at least 1).');
-      setFieldErrors({ initialQty: ['Total received pots must be at least 1.'] });
+    const trimmedBatchCode = batchNumber.trim().toUpperCase();
+    if (!trimmedBatchCode) {
+      setErrorMessage('Please specify a Batch Code or Number.');
+      setFieldErrors({ batchNumber: ['Batch code is required.'] });
       return;
     }
 
-    if (formData.currentQty === '' || isNaN(Number(formData.currentQty)) || Number(formData.currentQty) < 0) {
-      setErrorMessage('Please enter or verify the ready to sell stock quantity.');
-      setFieldErrors({ currentQty: ['Ready to sell stock cannot be negative.'] });
+    if (!purchaseDate) {
+      setErrorMessage('Please specify the purchase or arrival date.');
+      setFieldErrors({ purchaseDate: ['Arrival date is required.'] });
       return;
     }
 
-    if (formData.unitCostPrice !== '' && Number(formData.unitCostPrice) < 0) {
-      setErrorMessage('Unit purchase cost cannot be negative.');
-      setFieldErrors({ unitCostPrice: ['Unit purchase cost cannot be negative.'] });
-      return;
-    }
+    // Validate each plant item row
+    for (let i = 0; i < plantItems.length; i++) {
+      const row = plantItems[i];
+      const rowNum = i + 1;
 
-    const payload: InventoryBatchInput = {
-      batchNumber: formData.batchNumber,
-      plantId: formData.plantId,
-      vendorId: formData.vendorId || undefined,
-      initialQty: Number(formData.initialQty),
-      currentQty: Number(formData.currentQty),
-      mortalityQty: formData.mortalityQty === '' ? 0 : Number(formData.mortalityQty),
-      unitCostPrice: formData.unitCostPrice === '' ? null : Number(formData.unitCostPrice),
-      purchaseDate: formData.purchaseDate,
-    };
-
-    startTransition(async () => {
-      let result;
-      if (mode === 'edit' && initialData) {
-        result = await updateInventoryBatchAction(initialData.id, payload);
-      } else {
-        result = await createInventoryBatchAction(payload);
+      if (!row.plantId) {
+        setErrorMessage(`Please select a plant cultivar for variety #${rowNum}.`);
+        return;
       }
 
+      if (row.initialQty === '' || isNaN(Number(row.initialQty)) || Number(row.initialQty) < 1) {
+        setErrorMessage(`Please enter received pots for variety #${rowNum} (at least 1).`);
+        return;
+      }
+
+      if (row.currentQty === '' || isNaN(Number(row.currentQty)) || Number(row.currentQty) < 0) {
+        setErrorMessage(`Please verify ready stock for variety #${rowNum} (cannot be negative).`);
+        return;
+      }
+
+      if (row.unitCostPrice !== '' && Number(row.unitCostPrice) < 0) {
+        setErrorMessage(`Unit purchase cost for variety #${rowNum} cannot be negative.`);
+        return;
+      }
+    }
+
+    startTransition(async () => {
+      // 1. Single Edit Mode
+      if (mode === 'edit' && initialData) {
+        const row = plantItems[0];
+        const payload: InventoryBatchInput = {
+          batchNumber: trimmedBatchCode,
+          plantId: row.plantId,
+          vendorId: vendorId || undefined,
+          initialQty: Number(row.initialQty),
+          currentQty: Number(row.currentQty),
+          mortalityQty: row.mortalityQty === '' ? 0 : Number(row.mortalityQty),
+          unitCostPrice: row.unitCostPrice === '' ? null : Number(row.unitCostPrice),
+          purchaseDate,
+        };
+
+        const result = await updateInventoryBatchAction(initialData.id, payload);
+        if (result.success) {
+          router.push(APP_ROUTES.INVENTORY);
+        } else {
+          setErrorMessage(result.error || 'Failed to update inventory batch details.');
+          if (result.fieldErrors) setFieldErrors(result.fieldErrors);
+        }
+        return;
+      }
+
+      // 2. Multi-Plant Consignment Create Mode
+      const consignmentPayload: BatchConsignmentInput = {
+        batchNumber: trimmedBatchCode,
+        purchaseDate,
+        vendorId: vendorId || null,
+        items: plantItems.map((row) => ({
+          plantId: row.plantId,
+          initialQty: Number(row.initialQty),
+          currentQty: Number(row.currentQty),
+          mortalityQty: row.mortalityQty === '' ? 0 : Number(row.mortalityQty),
+          unitCostPrice: row.unitCostPrice === '' ? null : Number(row.unitCostPrice),
+        })),
+      };
+
+      const result = await createBatchConsignmentAction(consignmentPayload);
       if (result.success) {
         router.push(APP_ROUTES.INVENTORY);
       } else {
-        setErrorMessage(result.error || 'Failed to save inventory batch details.');
-        if (result.fieldErrors) {
-          setFieldErrors(result.fieldErrors);
-        }
+        setErrorMessage(result.error || 'Failed to register consignment batch.');
+        if (result.fieldErrors) setFieldErrors(result.fieldErrors);
       }
     });
   };
 
+  // Archive / Delete handler (Edit mode only)
   const handleDelete = async () => {
     if (!initialData) return;
     const confirmed = window.confirm(
-      `Are you sure you want to delete batch ${initialData.batchNumber}? This record will be archived.`
+      `Are you sure you want to remove batch ${initialData.batchNumber} from active records?`
     );
     if (!confirmed) return;
 
@@ -367,200 +363,302 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     });
   };
 
-  const handleCancel = () => {
-    router.push(APP_ROUTES.INVENTORY);
-  };
-
-  // Dynamic Batch Calculations
-  const receivedNum = typeof formData.initialQty === 'number' ? formData.initialQty : 0;
-  const unitCostNum = typeof formData.unitCostPrice === 'number' ? formData.unitCostPrice : 0;
-  const damagedNum = typeof formData.mortalityQty === 'number' ? formData.mortalityQty : 0;
-  const readyStockNum = typeof formData.currentQty === 'number' ? formData.currentQty : Math.max(0, receivedNum - damagedNum);
-
-  const totalInvestment = receivedNum * unitCostNum;
-  const damagedLossAmount = damagedNum * unitCostNum;
-
-  const hasCostData = typeof formData.unitCostPrice === 'number' && formData.unitCostPrice > 0;
-  const hasQuantityData = typeof formData.initialQty === 'number' && formData.initialQty > 0;
-
   return (
-    <form onSubmit={handleSubmit} className={styles.formContainer} noValidate>
-      {/* Top Error Alert Banner */}
-      {errorMessage && (
-        <div className={styles.errorBanner} role="alert">
-          <AlertCircle size={18} />
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
-      {/* Compact Restrained Card */}
-      <div className={styles.card}>
+    <div className={styles.formContainer}>
+      <form onSubmit={handleSubmit} className={styles.card} noValidate>
+        {/* Form Title & Context */}
         <div className={styles.header}>
           <h2 className={styles.title}>
-            {mode === 'edit' ? 'Edit Sapling Batch' : 'Log New Sapling Batch'}
+            {mode === 'edit'
+              ? `Edit Batch Consignment: ${initialData?.batchNumber}`
+              : 'Log New Sapling Batch'}
           </h2>
           <p className={styles.description}>
             {mode === 'edit'
-              ? 'Update stock counts, unit purchase cost, mortality audits, and arrival dates.'
-              : 'Register a new nursery sapling consignment or internal propagation lot.'}
+              ? 'Update stock quantities, unit procurement costs, and mortality adjustments.'
+            : 'Enter consignment details once and add multiple plant cultivars under this shared batch.'}
           </p>
         </div>
 
-        {/* Clean, Compact 2-Column Grid */}
-        <div className={styles.grid2}>
-          {/* ROW 1: [ Batch Code / Number (Disabled, Auto-generated) ] | [ Purchase / Arrival Date ] */}
-          <Input
-            label="Batch Code / Number"
-            placeholder="Auto-generated batch number"
-            value={formData.batchNumber}
-            onChange={(e) => handleChange('batchNumber', e.target.value)}
-            errorMessage={fieldErrors.batchNumber?.[0]}
-            disabled
-            helperText="Auto-generated unique batch tracking identifier"
-            className={styles.disabledBatchInput}
-          />
+        {/* Top-Level Server Error Banner */}
+        {errorMessage && (
+          <div className={styles.errorBanner} role="alert">
+            <AlertCircle size={15} />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
-          <Input
-            label="Purchase / Arrival Date"
-            type="date"
-            value={formData.purchaseDate}
-            onChange={(e) => handleChange('purchaseDate', e.target.value)}
-            errorMessage={fieldErrors.purchaseDate?.[0]}
-            required
-            prefixIcon={<Calendar size={18} />}
-          />
-
-          {/* ROW 2: [ Plant Cultivar / Variety ] | [ Supplying Vendor (Optional) ] */}
-          <SearchableSelect
-            label="Plant Cultivar / Variety"
-            options={plantOptions}
-            value={formData.plantId}
-            onChange={(val) => handleChange('plantId', val)}
-            errorMessage={fieldErrors.plantId?.[0]}
-            required
-            placeholder="Select plant variety"
-            isClearable={false}
-          />
-
-          <SearchableSelect
-            label="Supplying Vendor (Optional)"
-            options={vendorOptions}
-            value={formData.vendorId || ''}
-            onChange={(val) => handleChange('vendorId', val)}
-            errorMessage={fieldErrors.vendorId?.[0]}
-            placeholder="Select supplier (optional)"
-          />
-
-          {/* ROW 3: [ Total Received Pots (एकूण आलेली झाडे) ] | [ Unit Purchase Cost (₹ per pot) ] */}
-          <Input
-            label="Total Received Pots (एकूण आलेली झाडे)"
-            type="number"
-            step="1"
-            min="1"
-            placeholder="Enter received quantity"
-            value={formData.initialQty !== undefined ? formData.initialQty : ''}
-            onChange={(e) => handleInitialQtyChange(e.target.value)}
-            errorMessage={fieldErrors.initialQty?.[0]}
-            required
-          />
-
-          <Input
-            label="Unit Purchase Cost (₹ per pot)"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Enter unit cost"
-            value={formData.unitCostPrice !== undefined ? formData.unitCostPrice : ''}
-            onChange={(e) => handleUnitCostChange(e.target.value)}
-            errorMessage={fieldErrors.unitCostPrice?.[0]}
-            prefixIcon={<span>₹</span>}
-          />
-
-          {/* ROW 4: [ Damaged / Dead Pots (खराब / वाळलेली झाडे) ] | [ Ready to Sell Stock (विक्रीसाठी तयार झाडे) ] */}
-          <Input
-            label="Damaged / Dead Pots (खराब / वाळलेली झाडे)"
-            type="number"
-            step="1"
-            min="0"
-            placeholder="Enter damaged quantity"
-            value={formData.mortalityQty !== undefined ? formData.mortalityQty : ''}
-            onChange={(e) => handleMortalityQtyChange(e.target.value)}
-            errorMessage={fieldErrors.mortalityQty?.[0]}
-          />
-
-          <Input
-            label="Ready to Sell Stock (विक्रीसाठी तयार झाडे)"
-            type="number"
-            step="1"
-            min="0"
-            placeholder="Enter ready stock quantity"
-            value={formData.currentQty !== undefined ? formData.currentQty : ''}
-            onChange={(e) => handleCurrentQtyChange(e.target.value)}
-            errorMessage={fieldErrors.currentQty?.[0]}
-            required
-          />
-
-          {/* ROW 5: Sleek Single-Line Horizontal Financial & Stock Summary Ribbon */}
-          <div className={styles.summaryRibbon} role="status">
-            <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Total Investment:</span>
-              <span className={styles.ribbonValue}>
-                {hasCostData && hasQuantityData
-                  ? `₹${totalInvestment.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-                  : '₹0'}
+        {/* ================================================================ */}
+        {/* SECTION 1: SHARED CONSIGNMENT HEADER                             */}
+        {/* ================================================================ */}
+        <div className={styles.sharedHeaderSection}>
+          <div className={styles.sectionHeading}>
+            <span>Shared Consignment Details</span>
+            {existingBatchCodes.length > 0 && mode === 'create' && (
+              <span style={{ fontSize: '0.6875rem', fontWeight: 500, color: '#047857', textTransform: 'none' }}>
+                Select or type existing batch to append
               </span>
+            )}
+          </div>
+
+          <div className={styles.grid3}>
+            {/* 1. Batch Code / Number */}
+            <div>
+              <Input
+                label="Batch Code / Number"
+                value={batchNumber}
+                onChange={(e) => {
+                  setBatchNumber(e.target.value);
+                  if (fieldErrors.batchNumber) {
+                    setFieldErrors((prev) => {
+                      const updated = { ...prev };
+                      delete updated.batchNumber;
+                      return updated;
+                    });
+                  }
+                }}
+                required
+                list="existing-batch-codes"
+                errorMessage={fieldErrors.batchNumber?.[0]}
+                disabled={isPending}
+              />
+              {existingBatchCodes.length > 0 && (
+                <datalist id="existing-batch-codes">
+                  {existingBatchCodes.map((code) => (
+                    <option key={code} value={code} />
+                  ))}
+                </datalist>
+              )}
             </div>
 
-            <span className={styles.ribbonDivider}>|</span>
-
-            <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Ready to Sell:</span>
-              <span className={styles.ribbonValue}>
-                {hasQuantityData ? `${readyStockNum} Pots` : '0 Pots'}
-              </span>
+            {/* 2. Purchase / Arrival Date */}
+            <div>
+              <Input
+                label="Purchase / Arrival Date"
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => {
+                  setPurchaseDate(e.target.value);
+                  if (fieldErrors.purchaseDate) {
+                    setFieldErrors((prev) => {
+                      const updated = { ...prev };
+                      delete updated.purchaseDate;
+                      return updated;
+                    });
+                  }
+                }}
+                required
+                errorMessage={fieldErrors.purchaseDate?.[0]}
+                disabled={isPending}
+              />
             </div>
 
-            <span className={styles.ribbonDivider}>|</span>
-
-            <div className={styles.ribbonItem}>
-              <span className={styles.ribbonLabel}>Damaged Loss:</span>
-              <span
-                className={`${styles.ribbonValue} ${
-                  damagedLossAmount > 0 ? styles.ribbonLossDanger : ''
-                }`}
-              >
-                {hasCostData && damagedNum > 0
-                  ? `₹${damagedLossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-                  : '₹0'}
-              </span>
+            {/* 3. Supplying Vendor (Optional) */}
+            <div>
+              <SearchableSelect
+                label="Supplying Vendor (Optional)"
+                options={vendorOptions}
+                value={vendorId}
+                onChange={(val) => setVendorId(val)}
+                disabled={isPending}
+              />
             </div>
           </div>
         </div>
 
-        {/* Action Controls Footer */}
-        <footer className={styles.footer}>
-          {mode === 'edit' && initialData ? (
-            <Button
+        {/* ================================================================ */}
+        {/* SECTION 2: REPEATABLE PLANT LINE-ITEM ROWS                       */}
+        {/* ================================================================ */}
+        <div className={styles.plantRepeaterList}>
+          {plantItems.map((row, idx) => (
+            <div key={row.id} className={styles.plantCard}>
+              <div className={styles.plantCardHeader}>
+                <div className={styles.plantCardIndex}>
+                  <Sprout size={14} color="#1B4D3E" />
+                  <span>Plant Variety #{idx + 1}</span>
+                </div>
+
+                {plantItems.length > 1 && (
+                  <button
+                    type="button"
+                    className={styles.removeRowBtn}
+                    onClick={() => handleRemovePlantRow(row.id)}
+                    title="Remove variety"
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Plant Variety Selection */}
+              <div>
+                <SearchableSelect
+                  label="Plant Cultivar / Variety"
+                  options={plantOptions}
+                  value={row.plantId}
+                  onChange={(val) => updatePlantRow(row.id, { plantId: val })}
+                  required
+                  disabled={isPending}
+                />
+              </div>
+
+              {/* 4 Quantitative Inputs in Compact Grid */}
+              <div className={styles.grid4}>
+                {/* 1. Total Received Pots */}
+                <div>
+                  <Input
+                    label="Total Received Pots (एकूण आलेली झाडे)"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={row.initialQty}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                      updatePlantRow(row.id, { initialQty: isNaN(val as number) ? '' : val });
+                    }}
+                    required
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* 2. Unit Purchase Cost */}
+                <div>
+                  <Input
+                    label="Unit Purchase Cost (₹ per pot)"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={row.unitCostPrice}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                      updatePlantRow(row.id, { unitCostPrice: isNaN(val as number) ? '' : val });
+                    }}
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* 3. Damaged / Dead Pots */}
+                <div>
+                  <Input
+                    label="Damaged / Dead Pots (खराब / वाळलेली झाडे)"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={row.mortalityQty}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                      updatePlantRow(row.id, { mortalityQty: isNaN(val as number) ? '' : val });
+                    }}
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* 4. Ready to Sell Stock */}
+                <div>
+                  <Input
+                    label="Ready to Sell Stock (विक्रीसाठी तयार झाडे)"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={row.currentQty}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                      updatePlantRow(row.id, { currentQty: isNaN(val as number) ? '' : val });
+                    }}
+                    required
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* "+ Add Another Plant" Action Button (Create mode or when adding varieties) */}
+          {mode === 'create' && (
+            <button
               type="button"
-              variant="danger"
-              onClick={handleDelete}
+              className={styles.addPlantButton}
+              onClick={handleAddPlantRow}
               disabled={isPending}
-              isLoading={isPending}
-              leftIcon={<Trash2 size={16} />}
             >
-              Delete Batch
-            </Button>
-          ) : (
-            <div />
+              <Plus size={15} />
+              <span>+ Add Another Plant</span>
+            </button>
           )}
+        </div>
+
+        {/* ================================================================ */}
+        {/* SECTION 3: COMBINED LIVE SUMMARY FOOTER                          */}
+        {/* ================================================================ */}
+        <div className={styles.summaryRibbon} aria-live="polite">
+          <div className={styles.ribbonItem}>
+            <span className={styles.ribbonLabel}>Total Plants / Varieties:</span>
+            <span className={styles.ribbonValue}>
+              {summary.totalVarieties || plantItems.length}
+            </span>
+          </div>
+
+          <span className={styles.ribbonDivider}>•</span>
+
+          <div className={styles.ribbonItem}>
+            <span className={styles.ribbonLabel}>Total Investment:</span>
+            <span className={styles.ribbonValue}>
+              ₹{summary.totalInvestment.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            </span>
+          </div>
+
+          <span className={styles.ribbonDivider}>•</span>
+
+          <div className={styles.ribbonItem}>
+            <span className={styles.ribbonLabel}>Total Ready to Sell:</span>
+            <span className={styles.ribbonValue}>
+              {summary.totalReady.toLocaleString('en-IN')} Pots
+            </span>
+          </div>
+
+          {summary.totalDamaged > 0 && (
+            <>
+              <span className={styles.ribbonDivider}>•</span>
+              <div className={styles.ribbonItem}>
+                <span className={styles.ribbonLabel}>Damaged:</span>
+                <span className={`${styles.ribbonValue} ${styles.ribbonLossDanger}`}>
+                  {summary.totalDamaged.toLocaleString('en-IN')} Pots
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ================================================================ */}
+        {/* SECTION 4: ACTIONS FOOTER                                        */}
+        {/* ================================================================ */}
+        <div className={styles.footer}>
+          <div>
+            {mode === 'edit' && initialData && (
+              <Button
+                type="button"
+                variant="danger"
+                leftIcon={<Trash2 size={14} />}
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                Archive Batch
+              </Button>
+            )}
+          </div>
 
           <div className={styles.primaryActions}>
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              leftIcon={<X size={14} />}
+              onClick={() => router.push(APP_ROUTES.INVENTORY)}
               disabled={isPending}
-              leftIcon={<X size={16} />}
             >
               Cancel
             </Button>
@@ -568,14 +666,14 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
             <Button
               type="submit"
               variant="primary"
+              leftIcon={<Save size={14} />}
               isLoading={isPending}
-              leftIcon={<Save size={16} />}
             >
-              {mode === 'edit' ? 'Save Changes' : 'Save Batch'}
+              {mode === 'edit' ? 'Save Changes' : `Save Batch Consignment (${plantItems.length})`}
             </Button>
           </div>
-        </footer>
-      </div>
-    </form>
+        </div>
+      </form>
+    </div>
   );
 };

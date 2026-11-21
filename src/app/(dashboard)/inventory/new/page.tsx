@@ -8,24 +8,22 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Implemented the server routing shell for logging a new sapling inventory batch (`/inventory/new`).
- *    - Pre-fetched active plant varieties, wholesale vendors, and the auto-generated sequential batch tracking code
- *      via `getPlantsAction()`, `getVendorsAction()`, and `getNextBatchCodeAction()`.
- *    - Rendered the single reusable `<InventoryForm>` component in create mode (`mode="create"`).
+ *    - Implemented server routing shell for logging a new sapling inventory consignment (`/inventory/new`).
+ *    - Concurrently fetched botanical plant cultivars, wholesale suppliers, auto-generated batch sequence,
+ *      and active existing batch codes for re-use or consignment appending.
+ *    - Rendered `<InventoryForm mode="create" />` with multi-plant repeater capabilities.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills Specification 01 Section 1.3 & 1.4: "Single Reusable Form", "Strict Dedicated Full-Screen Routes".
- *    - Pre-populates the auto-generated sequential batch code (`BGW-BAT-YYYY-XXXX`) immediately on the server,
- *      eliminating client-side loading flashes or shifts.
+ *    - Fulfills User Request: "Multi-Plant Repeater UI in InventoryForm.tsx".
+ *    - Enables instant rendering on mobile and desktop without client layout shifts.
  * 
  * 3. WHAT WAS USED:
  *    - Next.js App Router server component.
- *    - Server Actions `getPlantsAction`, `getVendorsAction`, and `getNextBatchCodeAction`.
+ *    - Server Actions `getPlantsAction`, `getVendorsAction`, `getNextBatchCodeAction`, `getExistingBatchCodesAction`.
  *    - Shared feature component `<InventoryForm>`.
  * 
  * 4. HOW IT WORKS:
- *    - Concurrently resolves plant catalogue, vendor list, and next batch code on the server,
- *      passing them as props to `<InventoryForm>` for instantaneous, lag-free user interaction.
+ *    - Resolves catalogue data in parallel and feeds `<InventoryForm>`.
  * 
  * ----------------------------------------------------------------------------
  */
@@ -33,16 +31,17 @@
 import React from 'react';
 import { getPlantsAction } from '@/modules/plants/actions';
 import { getVendorsAction } from '@/modules/vendors/actions';
-import { getNextBatchCodeAction } from '@/modules/inventory/actions';
+import { getNextBatchCodeAction, getExistingBatchCodesAction } from '@/modules/inventory/actions';
 import { InventoryForm } from '@/modules/inventory/components';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewInventoryBatchPage() {
-  const [plantsResult, vendorsResult, batchCodeResult] = await Promise.all([
+  const [plantsResult, vendorsResult, batchCodeResult, existingCodesResult] = await Promise.all([
     getPlantsAction(),
     getVendorsAction(),
     getNextBatchCodeAction(),
+    getExistingBatchCodesAction(),
   ]);
 
   const plants = plantsResult.success && plantsResult.data ? plantsResult.data : [];
@@ -50,6 +49,9 @@ export default async function NewInventoryBatchPage() {
   const initialBatchCode = batchCodeResult.success && batchCodeResult.data
     ? batchCodeResult.data
     : `BGW-BAT-${new Date().getFullYear()}-0001`;
+  const existingBatchCodes = existingCodesResult.success && existingCodesResult.data
+    ? existingCodesResult.data
+    : [];
 
   return (
     <InventoryForm
@@ -57,6 +59,7 @@ export default async function NewInventoryBatchPage() {
       plants={plants}
       vendors={vendors}
       initialBatchCode={initialBatchCode}
+      existingBatchCodes={existingBatchCodes}
     />
   );
 }

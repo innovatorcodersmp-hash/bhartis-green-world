@@ -382,16 +382,55 @@ export async function createPosBillAction(
         },
       });
 
-      // 5b. Decrement plant live inventory stock counts
+      // 5b. Decrement plant live inventory stock counts and active batches (FIFO)
       for (const item of data.items) {
-        await tx.plant.update({
-          where: { id: item.plantId },
-          data: {
-            stockCount: {
-              decrement: item.quantity,
-            },
+        const activeBatches = await tx.inventoryBatch.findMany({
+          where: {
+            plantId: item.plantId,
+            status: { not: 'ARCHIVED' },
+            currentQty: { gt: 0 },
           },
+          orderBy: { purchaseDate: 'asc' },
         });
+
+        if (activeBatches.length > 0) {
+          let remainingToDeduct = item.quantity;
+          for (const batch of activeBatches) {
+            if (remainingToDeduct <= 0) break;
+            const deduct = Math.min(batch.currentQty, remainingToDeduct);
+            await tx.inventoryBatch.update({
+              where: { id: batch.id },
+              data: { currentQty: batch.currentQty - deduct },
+            });
+            remainingToDeduct -= deduct;
+          }
+
+          // Recalculate plant stock count from batch sum
+          const stockAggregate = await tx.inventoryBatch.aggregate({
+            where: {
+              plantId: item.plantId,
+              status: { not: 'ARCHIVED' },
+            },
+            _sum: {
+              currentQty: true,
+            },
+          });
+          await tx.plant.update({
+            where: { id: item.plantId },
+            data: {
+              stockCount: stockAggregate._sum.currentQty ?? 0,
+            },
+          });
+        } else {
+          await tx.plant.update({
+            where: { id: item.plantId },
+            data: {
+              stockCount: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }
       }
 
       // 5c. If unpaid balance due exists and customer is linked, update customer Udhar ledger
@@ -413,6 +452,9 @@ export async function createPosBillAction(
     revalidatePath(APP_ROUTES.POS);
     revalidatePath(APP_ROUTES.PLANTS);
     revalidatePath(APP_ROUTES.CUSTOMERS);
+    revalidatePath(APP_ROUTES.DASHBOARD);
+    revalidatePath('/dashboard');
+    revalidatePath('/plants');
 
     return {
       success: true,

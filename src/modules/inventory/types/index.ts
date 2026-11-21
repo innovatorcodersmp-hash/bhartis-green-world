@@ -8,25 +8,25 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Established TypeScript interfaces and Zod validation schemas (`InventoryBatchInputSchema`) for Sapling Batches and Inventory.
- *    - Added optional `unitCostPrice` (Procurement Cost per Pot in ₹) to track consignment investment and mortality financial loss.
- *    - Defined data structures for tracking batch provenance: Batch Number, Plant FK, Vendor FK,
- *      Initial Quantity, Current Stock, Mortality Count, Unit Cost Price, and Procurement Date.
- *    - Structured composite relational types (`InventoryBatchWithRelations`) including joined Plant and Vendor models.
- *    - Declared directory metrics contract for live nursery stock mortality and batch tracking.
+ *    - Extended TypeScript interfaces and Zod schemas to support multi-plant shared batch consignments.
+ *    - Declared `BatchPlantItemInputSchema` for repeatable plant line-items under a single consignment.
+ *    - Declared `BatchConsignmentInputSchema` accepting shared header metadata (`batchNumber`, `purchaseDate`, `vendorId`)
+ *      and an array of `items` (`BatchPlantItemInput[]`).
+ *    - Retained `InventoryBatchInputSchema` for single-item batch edits (`/inventory/[id]/edit`).
+ *    - Exported relational and metrics types (`InventoryBatchWithRelations`, `InventoryBatchMetrics`).
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills user request: "TASK: ADD UNIT PURCHASE COST AND AUTO-CALCULATE BATCH TOTALS IN INVENTORY FORM".
- *    - Fulfills Specification 04 Section 1 (Zod validation) and Specification 05 (Database Schema).
- *    - Enables nursery management in Kolhapur to monitor total invested capital and damaged stock losses in real time.
+ *    - Fulfills User Request: "Upgrade Log New Sapling Batch workflow so nursery staff can log multiple plant
+ *      cultivars/varieties under a single shared Batch Code in one submission".
  * 
  * 3. WHAT WAS USED:
- *    - `zod` validation schema builder.
+ *    - `zod` validation schemas.
  *    - `@prisma/client` domain models (`InventoryBatch`, `Plant`, `Vendor`, `RecordStatus`).
  * 
  * 4. HOW IT WORKS:
- *    - Raw input feeds through `InventoryBatchInputSchema.safeParse()`.
- *    - Parsed payload guarantees type-safe database persistence with relational joins via Prisma ORM.
+ *    - Form submits either multi-item consignment or single-item update;
+ *    - Zod schemas parse and normalize values;
+ *    - Server Actions persist atomically in Prisma transactions.
  * 
  * ----------------------------------------------------------------------------
  */
@@ -48,7 +48,7 @@ export type InventoryBatchWithRelations = InventoryBatch & {
 };
 
 // ============================================================================
-// 1. ZOD VALIDATION SCHEMA FOR INVENTORY BATCH CREATE & EDIT
+// 1. ZOD VALIDATION SCHEMA FOR SINGLE INVENTORY BATCH ROW (CREATE / EDIT)
 // ============================================================================
 
 export const InventoryBatchInputSchema = z.object({
@@ -66,6 +66,7 @@ export const InventoryBatchInputSchema = z.object({
     .string()
     .trim()
     .optional()
+    .nullable()
     .or(z.literal('')),
   initialQty: z.coerce
     .number()
@@ -88,13 +89,68 @@ export const InventoryBatchInputSchema = z.object({
   purchaseDate: z
     .string()
     .trim()
-    .min(1, { message: 'Please specify the purchase or propagation date.' }),
+    .min(1, { message: 'Please specify the purchase or arrival date.' }),
 });
 
 export type InventoryBatchInput = z.infer<typeof InventoryBatchInputSchema>;
 
 // ============================================================================
-// 2. SUMMARY METRICS INTERFACE FOR INVENTORY BATCHES
+// 2. ZOD VALIDATION SCHEMA FOR MULTI-PLANT CONSIGNMENT REPEATER
+// ============================================================================
+
+export const BatchPlantItemInputSchema = z.object({
+  plantId: z
+    .string()
+    .trim()
+    .min(1, { message: 'Please select a plant cultivar.' }),
+  initialQty: z.coerce
+    .number()
+    .int({ message: 'Received pots must be a whole number.' })
+    .min(1, { message: 'Received pots must be at least 1.' }),
+  currentQty: z.coerce
+    .number()
+    .int({ message: 'Ready stock must be a whole number.' })
+    .min(0, { message: 'Ready stock cannot be negative.' }),
+  mortalityQty: z.coerce
+    .number()
+    .int({ message: 'Damaged pots must be a whole number.' })
+    .min(0, { message: 'Damaged pots cannot be negative.' })
+    .default(0),
+  unitCostPrice: z.coerce
+    .number()
+    .min(0, { message: 'Unit purchase cost cannot be negative.' })
+    .optional()
+    .nullable(),
+});
+
+export type BatchPlantItemInput = z.infer<typeof BatchPlantItemInputSchema>;
+
+export const BatchConsignmentInputSchema = z.object({
+  batchNumber: z
+    .string()
+    .trim()
+    .min(2, { message: 'Batch code must be at least 2 characters.' })
+    .max(60, { message: 'Batch code cannot exceed 60 characters.' })
+    .transform((val) => val.toUpperCase()),
+  purchaseDate: z
+    .string()
+    .trim()
+    .min(1, { message: 'Please specify the purchase or arrival date.' }),
+  vendorId: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+  items: z
+    .array(BatchPlantItemInputSchema)
+    .min(1, { message: 'Please add at least one plant cultivar to the batch.' }),
+});
+
+export type BatchConsignmentInput = z.infer<typeof BatchConsignmentInputSchema>;
+
+// ============================================================================
+// 3. SUMMARY METRICS INTERFACE FOR INVENTORY BATCHES
 // ============================================================================
 
 export interface InventoryBatchMetrics {

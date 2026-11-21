@@ -11,34 +11,34 @@
  *    - Built `<InventoryTableWrapper>`, configuring TanStack Table v8 column definitions for Sapling Batches and Inventory.
  *    - Structured columns for Batch Code, Plant Cultivar (with Marathi vernacular title), Supplying Vendor,
  *      Initial Consignment Qty, Current Live Units, Mortality Losses, Arrival Date, and 44px mobile touch Edit buttons.
+ *    - Enhanced Batch Code column with dynamic badge indicator for multi-plant shared batches (`Shared (X varieties)`).
  *    - Implemented visual alert badges for batches displaying mortality or depleted stock levels.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills Specification 03 Section 2.3: Responsive TanStack Data Table Wrapper with horizontal swipe container.
- *    - Allows nursery supervisors to inspect consignment performance, survival rates, and supplier quality across polyhouses.
- *    - Eliminates modal dialogs by routing edit triggers directly to dedicated full-screen `/inventory/[id]/edit`.
+ *    - Fulfills User Request: "Inventory Table Grouping / Display (InventoryTableWrapper.tsx)".
+ *    - Allows nursery supervisors to immediately spot shared consignment lots and audit individual plant cultivars.
  * 
  * 3. WHAT WAS USED:
  *    - `@tanstack/react-table` column definitions (`ColumnDef<InventoryBatchWithRelations>`).
  *    - Next.js `Link` component.
- *    - Lucide React icons (`Sprout`, `Truck`, `AlertTriangle`, `Edit3`, `Calendar`).
+ *    - Lucide React icons (`Sprout`, `Truck`, `AlertTriangle`, `Edit3`, `Calendar`, `Layers`).
  *    - Centralized route constants (`APP_ROUTES`).
  *    - Shared `<DataTable>` component with touch swipe helper banner.
  * 
  * 4. HOW IT WORKS:
- *    - Receives `batches` with joined `plant` and `vendor` records.
- *    - Generates memoized TanStack v8 column definitions.
- *    - Passes data to `<DataTable>`, providing search filtering across batch numbers, plant names, and vendor names.
+ *    - Receives `batches` with joined `plant` and `vendor` records;
+ *    - Pre-computes batch frequency map to identify multi-plant consignments;
+ *    - Passes data to `<DataTable>` with search filtering across batch numbers, plant names, and vendors.
  * 
  * ----------------------------------------------------------------------------
  */
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { ColumnDef } from '@tanstack/react-table';
-import { Sprout, Truck, AlertTriangle, Edit3, Calendar } from 'lucide-react';
+import { Sprout, Truck, AlertTriangle, Edit3, Calendar, Layers } from 'lucide-react';
 import { APP_ROUTES } from '@/lib/constants/routes';
 import { DataTable } from '@/components/datatable';
 import { InventoryBatchWithRelations } from '../types';
@@ -52,20 +52,56 @@ export const InventoryTableWrapper: React.FC<InventoryTableWrapperProps> = ({
   batches,
   toolbarActions,
 }) => {
+  // Pre-calculate count of items sharing each batch number
+  const batchCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const b of batches) {
+      counts[b.batchNumber] = (counts[b.batchNumber] || 0) + 1;
+    }
+    return counts;
+  }, [batches]);
+
   const columns: ColumnDef<InventoryBatchWithRelations>[] = [
     {
       accessorKey: 'batchNumber',
       header: 'Batch Number',
-      cell: ({ row }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-          <span style={{ fontWeight: 700, color: '#1B4D3E', fontSize: '0.9375rem', letterSpacing: '0.025em' }}>
-            {row.original.batchNumber}
-          </span>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            ID: {row.original.id.slice(0, 8)}...
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const count = batchCounts[row.original.batchNumber] || 1;
+        const isShared = count > 1;
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+            <span style={{ fontWeight: 700, color: '#1B4D3E', fontSize: '0.9375rem', letterSpacing: '0.025em' }}>
+              {row.original.batchNumber}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                ID: {row.original.id.slice(0, 8)}...
+              </span>
+              {isShared && (
+                <span
+                  style={{
+                    fontSize: '0.6875rem',
+                    fontWeight: 600,
+                    color: '#065F46',
+                    backgroundColor: '#ECFDF5',
+                    padding: '0.05rem 0.35rem',
+                    borderRadius: '4px',
+                    border: '1px solid #A7F3D0',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.2rem',
+                  }}
+                  title="Multiple plant cultivars in this consignment batch"
+                >
+                  <Layers size={11} />
+                  <span>Shared ({count})</span>
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'plant.name',

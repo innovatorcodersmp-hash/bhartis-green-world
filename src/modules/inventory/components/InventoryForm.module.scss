@@ -8,25 +8,24 @@
  * ----------------------------------------------------------------------------
  * 
  * 1. WHAT WAS DONE:
- *    - Re-engineered `<InventoryForm>` into an ultra-compact, height-optimized UI card (`max-width: 44rem; margin: 0 auto;`).
- *    - Reduced card padding (`0.85rem 1rem 0.75rem`) and grid gaps (`0.75rem 1rem`) to eliminate vertical stretching.
- *    - Replaced the large 3-card summary block with a single sleek horizontal ribbon (`.summaryRibbon`) displaying:
- *      Total Investment: ₹X,XXX | Ready to Sell: X Pots | Damaged Loss: ₹X in one compact 12px row.
- *    - Styled disabled batch tracking code with clean monospace typography (`.disabledBatchInput`).
- *    - Enforced 44px minimum touch targets on footer buttons for mobile-first PWA compliance.
+ *    - Re-engineered `<InventoryForm>` to support multi-plant repeater consignment batches.
+ *    - Structured styling for shared consignment header (Batch Code, Arrival Date, Vendor).
+ *    - Added styling for repeatable plant line-item cards (`.plantCard`, `.plantCardHeader`, `.removeRowBtn`).
+ *    - Added clean styling for `+ Add Another Plant` action button (`.addPlantButton`).
+ *    - Integrated combined summary footer ribbon (`.summaryRibbon`) with live calculated totals
+ *      (Total Varieties, Total Investment ₹, Total Ready to Sell Pots).
+ *    - Enforced 44px minimum touch targets and mobile-first PWA responsiveness.
  * 
  * 2. WHY IT WAS DONE:
- *    - Fulfills user request: "TASK: ULTRA-COMPACT REDESIGN FOR INVENTORY BATCH FORM AND FINANCIAL SUMMARY".
- *    - Fulfills Specification 01: Clean, tight form standards & compact viewport ergonomics.
- *    - Ensures the entire sapling batch registration form fits comfortably on screen without excessive scrolling.
+ *    - Fulfills User Request: "Multi-Plant Repeater UI in InventoryForm.tsx".
+ *    - Enables nursery staff to log multiple plant cultivars under one shared consignment batch code.
  * 
  * 3. WHAT WAS USED:
  *    - SASS mixins (`@include card-surface`, `@include tablet-up`).
  *    - Design token variables ($color-primary, $color-border, $border-radius-sm).
  * 
  * 4. HOW IT WORKS:
- *    - Positions 8 tightly spaced fields across a 2-column grid followed by an emerald-themed summary ribbon
- *      and compact action footer inside a single width-restrained card surface.
+ *    - Provides high-density card and grid layouts for shared headers and repeatable plant item rows.
  * 
  * ----------------------------------------------------------------------------
  */
@@ -38,9 +37,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 44rem; // ~704px restrained maximum width
-  margin: 0 auto;   // Center horizontally in viewport
-  padding: 0.25rem 0 1rem;
+  max-width: 48rem; // ~768px comfortable width for multi-plant forms
+  margin: 0 auto;
+  padding: 0.25rem 0 1.5rem;
 }
 
 .card {
@@ -48,7 +47,7 @@
   padding: 0.85rem 1rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
   border-radius: $border-radius-sm;
   background-color: #ffffff;
   border: 1px solid #E5E7EB;
@@ -56,31 +55,65 @@
 
   @include tablet-up {
     padding: 1rem 1.25rem 0.85rem;
-    gap: 0.85rem;
+    gap: 1rem;
   }
 }
 
 .header {
   border-bottom: 1px solid #F3F4F6;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.05rem;
+  gap: 0.1rem;
 }
 
 .title {
-  font-size: 0.875rem; // 14px clean title
+  font-size: 0.9375rem; // 15px clean title
   font-weight: $font-weight-semibold;
   color: $color-primary; // #1B4D3E
 }
 
 .description {
-  font-size: 0.6875rem; // 11px compact description
+  font-size: 0.75rem; // 12px compact description
   color: $color-text-muted;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
-// Tight, compact 2-column grid minimizing vertical height
+// Shared consignment header box
+.sharedHeaderSection {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sectionHeading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4B5563;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Tight, compact 2-column or 3-column grid
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem 0.85rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem 0.85rem;
+    align-items: start;
+  }
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: 1fr;
@@ -93,15 +126,98 @@
   }
 }
 
-// Monospace styling for auto-generated disabled batch tracking code
-.disabledBatchInput {
-  input:disabled {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    font-weight: 700;
-    color: #1B4D3E !important;
-    letter-spacing: 0.05em;
-    cursor: default;
-    background-color: transparent;
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.65rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.65rem 0.75rem;
+    align-items: start;
+  }
+}
+
+// Plant repeater cards list
+.plantRepeaterList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plantCard {
+  border: 1px solid #E5E7EB;
+  border-radius: $border-radius-sm;
+  background-color: #ffffff;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: #D1D5DB;
+  }
+}
+
+.plantCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #F3F4F6;
+  padding-bottom: 0.35rem;
+}
+
+.plantCardIndex {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1B4D3E;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.removeRowBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #DC2626;
+    background-color: #FEE2E2;
+  }
+}
+
+.addPlantButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1.5px dashed #A7F3D0;
+  background-color: #F0FDF4;
+  border-radius: $border-radius-sm;
+  color: #047857;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 44px;
+
+  &:hover {
+    background-color: #DCFCE7;
+    border-color: #34D399;
+    color: #065F46;
   }
 }
 
@@ -117,24 +233,23 @@
   gap: 0.35rem;
 }
 
-// Sleek, single-line horizontal financial & stock summary ribbon
+// Sleek, horizontal financial & stock summary ribbon
 .summaryRibbon {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
   background-color: #ECFDF5; // emerald-50
   border: 1px solid #A7F3D0; // emerald-200
   border-radius: $border-radius-sm;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.1rem;
+  padding: 0.6rem 0.85rem;
+  margin-top: 0.25rem;
 
   @include tablet-up {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.45rem 1rem;
+    padding: 0.55rem 1rem;
   }
 }
 
@@ -142,33 +257,29 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.75rem; // text-xs
-  color: #065F46;     // emerald-800
+  font-size: 0.75rem;
+  color: #065F46;
   white-space: nowrap;
 }
 
 .ribbonLabel {
-  color: #047857;     // emerald-700
+  color: #047857;
   font-weight: $font-weight-medium;
 }
 
 .ribbonValue {
   font-weight: 700;
-  color: #064E3B;     // emerald-900
+  color: #064E3B;
 }
 
 .ribbonDivider {
   display: none;
-  color: #6EE7B7;     // emerald-300
+  color: #6EE7B7;
   font-weight: 300;
 
   @include tablet-up {
     display: inline;
   }
-}
-
-.ribbonLossDanger {
-  color: #DC2626 !important; // red-600
 }
 
 .footer {
