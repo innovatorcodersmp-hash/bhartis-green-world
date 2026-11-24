@@ -365,12 +365,12 @@ export const PosCheckoutSuccessModal: React.FC<PosCheckoutSuccessModalProps> = (
 
                 <div className={styles.brandInfo}>
                   <h1 className={styles.nurseryName}>BHARTI&apos;S GREEN WORLD</h1>
-                  <p className={styles.nurserySubtitle}>Plant Nursery &amp; Landscaping • Kolhapur</p>
+                  <p className={styles.nurserySubtitle}>Plant Nursery &amp; Landscaping</p>
                   <p className={styles.nurseryContact}>
-                    📍 Shiroli / Kolhapur, Maharashtra 416122 • 📞 +91 98220 12345
+                    📍 Bambarwadi, Tal. Panhala, Dist. Kolhapur • 📞 +91 85307 91085
                   </p>
                   <p className={styles.nurseryTaxInfo}>
-                    GSTIN / Nursery Reg: 27AABCB1234F1Z5 • Email: contact@bhartisgreenworld.com
+                    Email: contact@bhartisgreenworld.com
                   </p>
                 </div>
               </div>

@@ -63,7 +63,7 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
       <div className={styles.container}>
         {/* Left Side: Nursery Copyright */}
         <div className={styles.copyright}>
-          <span>© 2026 Bharti&apos;s Green World Nursery &amp; Landscaping • Kolhapur</span>
+          <span>© 2026 Bharti&apos;s Green World Nursery &amp; Landscaping • Bambarwadi, Kolhapur</span>
         </div>
 
         {/* Right Side: Developer Attribution with Crisp Icon Mark + Live Serif Typography */}

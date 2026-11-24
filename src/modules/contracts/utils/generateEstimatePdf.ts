@@ -89,7 +89,7 @@ export function buildEstimatePdf(estimate: LandscapingEstimateWithParsedItems): 
   );
   doc.setFontSize(7.5);
   doc.text(
-    'Shiroli / Kolhapur 416122 • Phone: +91 98220 12345 • GSTIN: 27AABCB1234F1Z5',
+    'Bambarwadi, Tal. Panhala, Dist. Kolhapur • Phone: +91 85307 91085',
     leftMargin + 28,
     32.5
   );

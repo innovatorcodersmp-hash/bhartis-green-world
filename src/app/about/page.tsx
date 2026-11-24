@@ -46,6 +46,7 @@ import {
   HardDrive,
   Mail,
   Building,
+  Phone,
   Receipt,
   Lock,
   ArrowRight,
@@ -187,9 +188,18 @@ export default function AboutPage() {
             </span>
           </div>
           <div className={styles.contactRow}>
+            <Phone size={16} />
+            <span>
+              <strong>Phone / WhatsApp:</strong>{' '}
+              <a href="tel:+918530791085" className={styles.emailLink}>
+                +91 85307 91085
+              </a>
+            </span>
+          </div>
+          <div className={styles.contactRow}>
             <Building size={16} />
             <span>
-              <strong>Facility:</strong> Bharti&apos;s Green World Nursery &amp; Landscaping, Kolhapur, Maharashtra, India
+              <strong>Facility:</strong> Bharti&apos;s Green World Nursery &amp; Landscaping, Bambarwadi, Tal. Panhala, Dist. Kolhapur, Maharashtra, India
             </span>
           </div>
         </div>

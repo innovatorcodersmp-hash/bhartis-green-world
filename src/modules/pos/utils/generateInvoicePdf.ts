@@ -107,7 +107,7 @@ export function buildInvoicePdf(bill: PosBillWithRelations): jsPDF {
   );
   doc.setFontSize(7.5);
   doc.text(
-    'Shiroli / Kolhapur 416122 • Phone: +91 98220 12345 • GSTIN: 27AABCB1234F1Z5',
+    'Bambarwadi, Tal. Panhala, Dist. Kolhapur • Phone: +91 85307 91085',
     leftMargin + 26,
     headerY + 19
   );

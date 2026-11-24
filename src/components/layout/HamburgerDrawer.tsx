@@ -350,7 +350,7 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({
               Privacy Policy
             </Link>
           </div>
-          <span className={styles.facilityInfo}>Bharti&apos;s Green World • Kolhapur</span>
+          <span className={styles.facilityInfo}>Bharti&apos;s Green World • Bambarwadi, Kolhapur</span>
           <span className={styles.appVersion}>ERP System</span>
         </div>
       </aside>

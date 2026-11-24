@@ -67,7 +67,7 @@ export function formatWhatsAppInvoiceMessage(
 ): string {
   const customerName = bill.customer?.name || 'Walk-in Retail Buyer';
   const phone = options?.customerPhone || bill.customer?.phone || '';
-  const nurseryPhone = options?.nurseryPhone || '+91 98220 12345';
+  const nurseryPhone = options?.nurseryPhone || '+91 85307 91085';
 
   const billDate = new Date(bill.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -95,7 +95,7 @@ export function formatWhatsAppInvoiceMessage(
 
   const lines = [
     '🌿 *BHARTI\'S GREEN WORLD NURSERY* 🌿',
-    '📍 Shiroli / Kolhapur, Maharashtra',
+    '📍 Bambarwadi, Tal. Panhala, Dist. Kolhapur',
     `📞 Contact: ${nurseryPhone}`,
     '--------------------------------',
     '🧾 *TAX INVOICE / CASH MEMO*',

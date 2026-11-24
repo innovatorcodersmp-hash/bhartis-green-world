@@ -141,8 +141,8 @@ export const EstimateTableWrapper: React.FC<EstimateTableWrapperProps> = ({
 
     const messageLines = [
       '🌿 *BHARTI\'S GREEN WORLD • SITE QUOTATION* 🌿',
-      '📍 Shiroli / Kolhapur, Maharashtra',
-      '📞 Phone: +91 98220 12345',
+      '📍 Bambarwadi, Tal. Panhala, Dist. Kolhapur',
+      '📞 Phone: +91 85307 91085',
       '--------------------------------',
       `*Estimate No:* ${estimate.estimateNo}`,
       `*Date:* ${estimateDate}`,

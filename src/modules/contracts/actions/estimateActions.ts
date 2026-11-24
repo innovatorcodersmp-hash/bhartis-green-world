@@ -151,7 +151,7 @@ export async function createLandscapingEstimateAction(
       status,
     } = parsed.data;
 
-    // Sanitize phone number (digits only, e.g. 9822012345)
+    // Sanitize phone number (digits only, e.g. 8530791085)
     const sanitizedPhone = clientPhone.replace(/\D/g, '').slice(-10);
 
     // Compute verified line item totals and material sum
