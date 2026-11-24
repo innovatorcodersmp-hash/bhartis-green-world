@@ -594,7 +594,7 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
               onClick={handleAddItem}
               leftIcon={<Plus size={13} />}
             >
-              + Add Plant Item
+              Add Plant Item
             </Button>
           </div>
         </div>
