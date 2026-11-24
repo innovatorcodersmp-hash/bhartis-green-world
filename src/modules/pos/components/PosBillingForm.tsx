@@ -60,11 +60,17 @@ import {
 import { Input, Button, SearchableSelect } from '@/components/ui';
 import { useSetPageHeader } from '@/components/layout';
 import { APP_ROUTES } from '@/lib/constants/routes';
-import { Customer, Plant, PaymentMode, PosItemLineInput, PosBillWithRelations } from '../types';
+import { Customer, Plant, PaymentMode, PosBillWithRelations } from '../types';
 import { createPosBillAction, getNextInvoiceNumberAction } from '../actions';
 import { PosBarcodeScanner } from './PosBarcodeScanner';
 import { PosCheckoutSuccessModal } from './PosCheckoutSuccessModal';
 import styles from './PosBillingForm.module.scss';
+
+export interface PosBillingRowItem {
+  plantId: string;
+  quantity: number | '';
+  unitPrice: number | '';
+}
 
 export interface PosBillingFormProps {
   customers: Customer[];
@@ -122,8 +128,8 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
   const [walkInPhone, setWalkInPhone] = useState<string>('');
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('CASH');
   const [transactionId, setTransactionId] = useState<string>('');
-  const [items, setItems] = useState<PosItemLineInput[]>([]);
-  const [amountPaid, setAmountPaid] = useState<number>(0);
+  const [items, setItems] = useState<PosBillingRowItem[]>([]);
+  const [amountPaid, setAmountPaid] = useState<number | ''>(0);
   const [isAmountManuallyEdited, setIsAmountManuallyEdited] = useState(false);
 
   // Auto-fetch sequential invoice code if not provided upfront
@@ -166,7 +172,11 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
 
   // Real-time Subtotal
   const subtotal = useMemo(
-    () => items.reduce((acc, it) => acc + (it.quantity || 0) * (it.unitPrice || 0), 0),
+    () =>
+      items.reduce(
+        (acc, it) => acc + (Number(it.quantity) || 0) * (Number(it.unitPrice) || 0),
+        0
+      ),
     [items]
   );
 
@@ -181,7 +191,7 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
     }
   }, [subtotal, paymentMode, isAmountManuallyEdited]);
 
-  const balanceDue = Math.max(0, subtotal - amountPaid);
+  const balanceDue = Math.max(0, subtotal - (Number(amountPaid) || 0));
 
   // Selected customer details
   const selectedCustomer = useMemo(
@@ -244,14 +254,77 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
     });
   };
 
-  const handleUpdateItemQuantity = (index: number, quantity: number) => {
-    const validQty = Math.max(1, quantity);
+  const handleUpdateItemQuantity = (index: number, val: string) => {
+    if (val === '') {
+      setItems((prev) => {
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          quantity: '',
+        };
+        return next;
+      });
+      return;
+    }
+
+    const parsed = parseInt(val, 10);
     setItems((prev) => {
       const next = [...prev];
       next[index] = {
         ...next[index],
-        quantity: validQty,
+        quantity: isNaN(parsed) ? '' : Math.max(0, parsed),
       };
+      return next;
+    });
+  };
+
+  const handleBlurItemQuantity = (index: number) => {
+    setItems((prev) => {
+      const next = [...prev];
+      const cur = next[index]?.quantity;
+      if (cur === '' || cur === 0 || Number(cur) < 1) {
+        next[index] = {
+          ...next[index],
+          quantity: 1,
+        };
+      }
+      return next;
+    });
+  };
+
+  const handleUpdateItemUnitPrice = (index: number, val: string) => {
+    if (val === '') {
+      setItems((prev) => {
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          unitPrice: '',
+        };
+        return next;
+      });
+      return;
+    }
+
+    const parsed = parseFloat(val);
+    setItems((prev) => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        unitPrice: isNaN(parsed) ? '' : Math.max(0, parsed),
+      };
+      return next;
+    });
+  };
+
+  const handleBlurItemUnitPrice = (index: number) => {
+    setItems((prev) => {
+      const next = [...prev];
+      if (next[index]?.unitPrice === '') {
+        next[index] = {
+          ...next[index],
+          unitPrice: 0,
+        };
+      }
       return next;
     });
   };
@@ -293,9 +366,10 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
         const existingIndex = prev.findIndex((it) => it.plantId === scannedPlant.id);
         if (existingIndex >= 0) {
           const next = [...prev];
+          const currentQty = Number(next[existingIndex].quantity) || 0;
           next[existingIndex] = {
             ...next[existingIndex],
-            quantity: (next[existingIndex].quantity || 0) + 1,
+            quantity: currentQty + 1,
           };
           return next;
         }
@@ -354,12 +428,12 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
         customerId: customerId || undefined,
         customerPhone: selectedCustomer?.phone || walkInPhone.trim() || undefined,
         paymentMode,
-        amountPaid: Number(amountPaid),
+        amountPaid: Number(amountPaid) || 0,
         transactionId: paymentMode === 'UPI' && transactionId.trim() ? transactionId.trim() : undefined,
         items: items.map((it) => ({
           plantId: it.plantId,
-          quantity: Number(it.quantity),
-          unitPrice: Number(it.unitPrice),
+          quantity: it.quantity === '' || Number(it.quantity) < 1 ? 1 : Math.round(Number(it.quantity)),
+          unitPrice: it.unitPrice === '' || Number(it.unitPrice) < 0 ? 0 : Number(it.unitPrice),
         })),
       };
 
@@ -546,7 +620,7 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
             </div>
           ) : (
             items.map((item, index) => {
-              const lineTotal = (item.quantity || 0) * (item.unitPrice || 0);
+              const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
 
               return (
                 <div key={index} className={styles.itemRow}>
@@ -564,9 +638,10 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
                     min="1"
                     step="1"
                     value={item.quantity}
-                    onChange={(e) =>
-                      handleUpdateItemQuantity(index, parseInt(e.target.value, 10) || 1)
-                    }
+                    onChange={(e) => handleUpdateItemQuantity(index, e.target.value)}
+                    onBlur={() => handleBlurItemQuantity(index)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onWheel={(e) => e.currentTarget.blur()}
                     required
                   />
 
@@ -576,14 +651,10 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
                     min="0"
                     step="0.01"
                     value={item.unitPrice}
-                    onChange={(e) => {
-                      const price = parseFloat(e.target.value) || 0;
-                      setItems((prev) => {
-                        const next = [...prev];
-                        next[index] = { ...next[index], unitPrice: price };
-                        return next;
-                      });
-                    }}
+                    onChange={(e) => handleUpdateItemUnitPrice(index, e.target.value)}
+                    onBlur={() => handleBlurItemUnitPrice(index)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onWheel={(e) => e.currentTarget.blur()}
                     required
                   />
 
@@ -685,8 +756,16 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
               value={amountPaid}
               onChange={(e) => {
                 setIsAmountManuallyEdited(true);
-                setAmountPaid(parseFloat(e.target.value) || 0);
+                const val = e.target.value;
+                setAmountPaid(val === '' ? '' : parseFloat(val) || 0);
               }}
+              onBlur={() => {
+                if (amountPaid === '') {
+                  setAmountPaid(0);
+                }
+              }}
+              onFocus={(e) => e.currentTarget.select()}
+              onWheel={(e) => e.currentTarget.blur()}
               errorMessage={fieldErrors.amountPaid?.[0]}
               prefixIcon={<span>₹</span>}
               required
@@ -718,7 +797,7 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>Total Items:</span>
             <span className={styles.summaryValue}>
-              {items.reduce((sum, it) => sum + (it.quantity || 0), 0)} pots
+              {items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)} pots
             </span>
           </div>
 
@@ -729,7 +808,7 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
 
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>Received:</span>
-            <span className={styles.summaryValue}>₹{Number(amountPaid).toFixed(2)}</span>
+            <span className={styles.summaryValue}>₹{(Number(amountPaid) || 0).toFixed(2)}</span>
           </div>
 
           <div
