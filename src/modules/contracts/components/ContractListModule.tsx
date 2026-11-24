@@ -88,7 +88,12 @@ export const ContractListModule: React.FC<ContractListModuleProps> = ({
   }, [contracts]);
 
   const toolbarButtons = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <Link href={APP_ROUTES.CONTRACTS_SITE_VISITS} style={{ textDecoration: 'none' }}>
+        <Button variant="outline" leftIcon={<Sprout size={15} />}>
+          Site Visits
+        </Button>
+      </Link>
       <Link href={APP_ROUTES.CONTRACTS_ESTIMATES} style={{ textDecoration: 'none' }}>
         <Button variant="outline" leftIcon={<FileText size={15} />}>
           Site Estimates

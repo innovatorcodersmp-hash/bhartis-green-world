@@ -259,6 +259,7 @@ model GardenContract {
   // Relationships
   materials         ContractMaterial[]
   payments          GardenContractPayment[]
+  siteVisits        SiteVisit[]
 
   // Indexes
   @@index([customerId])
@@ -349,6 +350,34 @@ model LandscapingEstimate {
   @@index([clientPhone])
   @@index([status])
   @@index([createdAt])
+}
+
+/// Routine landscaping site visit and maintenance log
+model SiteVisit {
+  id               String          @id @default(uuid())
+  contractId       String?
+  contract         GardenContract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  siteName         String
+  customerName     String
+  customerMobile   String
+  visitDate        DateTime        @default(now())
+  areasChecked     String          // Area or plants checked
+  workDone         String          // Selected work tags & notes
+  siteStatus       String          @default("Healthy") // Healthy, Minor Replacements Needed, Attention Required
+  replacementCount Int             @default(0)
+  replacementNotes String?
+  nextVisitDate    DateTime?
+  supervisorNotes  String?
+
+  // Mandatory Audit Fields
+  status           RecordStatus    @default(ACTIVE)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([contractId])
+  @@index([customerMobile])
+  @@index([visitDate])
+  @@index([status])
 }
 
 /// Automated and manual database backup tracking log

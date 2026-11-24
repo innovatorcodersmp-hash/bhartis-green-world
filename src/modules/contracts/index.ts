@@ -28,3 +28,4 @@ export * from './types';
 export * from './actions';
 export * from './components';
 export * from './utils';
+export * from '@/modules/landscaping';

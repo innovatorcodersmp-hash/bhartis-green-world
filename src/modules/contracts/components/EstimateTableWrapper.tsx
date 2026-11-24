@@ -54,6 +54,7 @@ import {
   CheckCheck,
   AlertCircle,
   Loader2,
+  Sprout,
 } from 'lucide-react';
 import { DataTable } from '@/components/datatable';
 import { MetricCard, Button } from '@/components/ui';
@@ -389,6 +390,16 @@ export const EstimateTableWrapper: React.FC<EstimateTableWrapperProps> = ({
         searchPlaceholder="Search estimates by client or site..."
         toolbarActions={
           <div className={styles.toolbarActions}>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => router.push(APP_ROUTES.CONTRACTS_SITE_VISITS)}
+              leftIcon={<Sprout size={16} />}
+            >
+              Site Visits
+            </Button>
+
             <Button
               type="button"
               variant="outline"

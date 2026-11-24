@@ -1,0 +1,244 @@
+@import '@/styles/abstract/variables';
+@import '@/styles/abstract/mixins';
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.errorBanner {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #B91C1C;
+  padding: 0.65rem 0.85rem;
+  border-radius: $border-radius-sm;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionCard {
+  @include card-surface;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  border-radius: $border-radius-sm;
+  background-color: #FFFFFF;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.grid1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.checkboxesGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.groupLabel {
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.tagChip {
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  border: 1px solid #D1D5DB;
+  background-color: #F9FAFB;
+  color: #4B5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+
+  &:hover {
+    background-color: #F3F4F6;
+    border-color: #9CA3AF;
+  }
+
+  &.selected {
+    background-color: #ECFDF5;
+    border-color: #059669;
+    color: #065F46;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.statusSelectorRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.statusOption {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.5rem 0.75rem;
+  border-radius: $border-radius-sm;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-medium;
+  border: 1px solid #E2E8F0;
+  background-color: #F8FAFC;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #F1F5F9;
+  }
+
+  &.activeHealthy {
+    background-color: #ECFDF5;
+    border-color: #10B981;
+    color: #065F46;
+    font-weight: $font-weight-bold;
+  }
+
+  &.activeMinor {
+    background-color: #FFFBEB;
+    border-color: #F59E0B;
+    color: #92400E;
+    font-weight: $font-weight-bold;
+  }
+
+  &.activeAttention {
+    background-color: #FEF2F2;
+    border-color: #EF4444;
+    color: #991B1B;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.liveSummaryCard {
+  background-color: #F0FDF4;
+  border: 1px dashed #86EFAC;
+  border-radius: $border-radius-sm;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.liveSummaryTitle {
+  font-size: 0.6875rem;
+  font-weight: $font-weight-bold;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.liveSummaryText {
+  font-size: 0.8125rem;
+  color: #14532D;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  color: #374151;
+}
+
+.textareaControl {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #D1D5DB;
+  border-radius: $border-radius-sm;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #111827;
+  resize: vertical;
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease-in-out;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 1px $color-primary;
+  }
+}
+
+.actionsBar {
+  @include card-surface;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-radius: $border-radius-sm;
+  background-color: #FFFFFF;
+}
+

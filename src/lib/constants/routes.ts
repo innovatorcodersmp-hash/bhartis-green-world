@@ -75,6 +75,10 @@ export const APP_ROUTES = {
   CONTRACTS_EDIT: (id: string) => `/contracts/${id}/edit`,
   CONTRACTS_ESTIMATES: '/contracts/estimates',
   CONTRACTS_ESTIMATES_NEW: '/contracts/estimates/new',
+  CONTRACTS_SITE_VISITS: '/contracts/site-visits',
+  CONTRACTS_SITE_VISITS_NEW: '/contracts/site-visits/new',
+  LANDSCAPING_SITE_VISITS: '/contracts/site-visits',
+  LANDSCAPING_SITE_VISITS_NEW: '/contracts/site-visits/new',
 
   // 7. Labor, Daily Wage & Worker Attendance
   LABOR: '/labor',

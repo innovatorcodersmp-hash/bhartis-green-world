@@ -130,6 +130,12 @@ const NAV_ITEMS: NavItem[] = [
     accent: 'lavender',
   },
   {
+    label: 'Site Visits & WhatsApp',
+    href: APP_ROUTES.CONTRACTS_SITE_VISITS,
+    icon: Sprout,
+    accent: 'green',
+  },
+  {
     label: 'Employee',
     href: APP_ROUTES.LABOR,
     icon: UserCheck,
