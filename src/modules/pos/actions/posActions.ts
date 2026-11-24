@@ -82,6 +82,7 @@ export async function generateNextInvoiceNumber(
     },
     select: { billNumber: true },
     orderBy: { createdAt: 'desc' },
+    take: 200,
   });
 
   let maxSeq = 0;
@@ -143,10 +144,18 @@ export async function generateNextInvoiceNumber(
   const nextSeq = Math.max(1, maxSeq + 1);
   let candidateBillNumber = `${prefix}${String(nextSeq).padStart(4, '0')}`;
 
-  // 5. Guarantee absolute uniqueness against race conditions
+  // 5. Guarantee absolute uniqueness against race conditions with safety limit
   let counter = nextSeq;
-  while (await txOrPrisma.posBill.findUnique({ where: { billNumber: candidateBillNumber }, select: { id: true } })) {
+  let safetyLimit = 0;
+  while (
+    safetyLimit < 50 &&
+    (await txOrPrisma.posBill.findUnique({
+      where: { billNumber: candidateBillNumber },
+      select: { id: true },
+    }))
+  ) {
     counter++;
+    safetyLimit++;
     candidateBillNumber = `${prefix}${String(counter).padStart(4, '0')}`;
   }
 
@@ -340,13 +349,11 @@ export async function createPosBillAction(
       const balanceDue = Math.max(0, totalAmount - data.amountPaid);
 
       // 6. Execute concurrency-safe atomic database transaction via Prisma ORM
-      const createdBill = await prisma.$transaction(async (tx) => {
-        let finalBillNumber = data.billNumber;
+      const createdBill = await prisma.$transaction(
+        async (tx) => {
+          let finalBillNumber = data.billNumber;
 
-        // Ensure finalBillNumber is unique before attempting insert
-        let isColliding = true;
-        let collisionAttempts = 0;
-        while (isColliding && collisionAttempts < 10) {
+          // Check if candidate billNumber already exists in DB
           const existingBill = await tx.posBill.findUnique({
             where: { billNumber: finalBillNumber },
             select: { id: true },
@@ -354,160 +361,179 @@ export async function createPosBillAction(
 
           if (existingBill) {
             finalBillNumber = await generateNextInvoiceNumber(tx);
-            collisionAttempts++;
-          } else {
-            isColliding = false;
           }
-        }
 
-        // Failsafe timestamp suffix if persistent collision
-        if (isColliding) {
-          const rand = Math.floor(1000 + Math.random() * 9000);
-          finalBillNumber = `BGW-INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}${rand}`;
-        }
+          let finalCustomerId = data.customerId && data.customerId.trim() ? data.customerId.trim() : null;
 
-        let finalCustomerId = data.customerId || null;
-
-        // Auto-resolve or create customer profile if credit/walk-in mobile number is provided
-        if (!finalCustomerId && data.customerPhone?.trim()) {
-          const cleanPhone = data.customerPhone.replace(/\D/g, '').slice(-10);
-          if (cleanPhone.length === 10) {
-            let customer = await tx.customer.findFirst({
-              where: { phone: cleanPhone },
+          // Verify customer exists if customerId is provided
+          if (finalCustomerId) {
+            const cust = await tx.customer.findUnique({
+              where: { id: finalCustomerId },
+              select: { id: true },
             });
-
-            if (!customer) {
-              customer = await tx.customer.create({
-                data: {
-                  name: `Walk-in Customer (${cleanPhone})`,
-                  phone: cleanPhone,
-                  totalUdharDue: 0,
-                  status: 'ACTIVE',
-                },
-              });
+            if (!cust) {
+              finalCustomerId = null;
             }
-            finalCustomerId = customer.id;
           }
-        }
 
-        // Verify that customer exists if ID is provided
-        if (finalCustomerId) {
-          const cust = await tx.customer.findUnique({
-            where: { id: finalCustomerId },
-            select: { id: true },
-          });
-          if (!cust) {
-            finalCustomerId = null;
+          // Auto-resolve or create customer profile if credit/walk-in mobile number is provided
+          if (!finalCustomerId && data.customerPhone?.trim()) {
+            const cleanPhone = data.customerPhone.replace(/\D/g, '').slice(-10);
+            if (cleanPhone.length === 10) {
+              let customer = await tx.customer.findFirst({
+                where: {
+                  OR: [
+                    { phone: cleanPhone },
+                    { phone: `+91${cleanPhone}` },
+                    { phone: `91${cleanPhone}` },
+                  ],
+                },
+                select: { id: true },
+              });
+
+              if (!customer) {
+                try {
+                  customer = await tx.customer.create({
+                    data: {
+                      name: `Walk-in Customer (${cleanPhone})`,
+                      phone: cleanPhone,
+                      totalUdharDue: 0,
+                      status: 'ACTIVE',
+                    },
+                    select: { id: true },
+                  });
+                } catch {
+                  customer = await tx.customer.findFirst({
+                    where: {
+                      OR: [
+                        { phone: cleanPhone },
+                        { phone: `+91${cleanPhone}` },
+                        { phone: `91${cleanPhone}` },
+                      ],
+                    },
+                    select: { id: true },
+                  });
+                }
+              }
+              if (customer) {
+                finalCustomerId = customer.id;
+              }
+            }
           }
-        }
 
-        // Verify that all plant IDs exist in catalog before creating lines
-        for (const item of data.items) {
-          const plant = await tx.plant.findUnique({
-            where: { id: item.plantId },
+          // Verify all plants exist in a single batch query
+          const plantIds = Array.from(new Set(data.items.map((it) => it.plantId)));
+          const existingPlants = await tx.plant.findMany({
+            where: { id: { in: plantIds } },
             select: { id: true, name: true, stockCount: true },
           });
-          if (!plant) {
-            throw new Error(`Plant cultivar with ID "${item.plantId}" was not found in catalog.`);
+          const foundIds = new Set(existingPlants.map((p) => p.id));
+          const missingIds = plantIds.filter((id) => !foundIds.has(id));
+          if (missingIds.length > 0) {
+            throw new Error(`Plant cultivar ID(s) [${missingIds.join(', ')}] were not found in botanical catalog.`);
           }
-        }
 
-        // 6a. Create POS Bill with nested line items
-        const newBill = await tx.posBill.create({
-          data: {
-            billNumber: finalBillNumber,
-            customer: finalCustomerId ? { connect: { id: finalCustomerId } } : undefined,
-            totalAmount,
-            paymentMode: data.paymentMode,
-            amountPaid: data.amountPaid,
-            balanceDue,
-            transactionId: data.transactionId ? data.transactionId : null,
-            status: 'ACTIVE',
-            items: {
-              create: data.items.map((item) => ({
-                plant: { connect: { id: item.plantId } },
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                totalPrice: item.quantity * item.unitPrice,
-                status: 'ACTIVE',
-              })),
-            },
-          },
-          include: {
-            customer: true,
-            items: {
-              include: {
-                plant: true,
+          // 6a. Create POS Bill with nested line items
+          const newBill = await tx.posBill.create({
+            data: {
+              billNumber: finalBillNumber,
+              customer: finalCustomerId ? { connect: { id: finalCustomerId } } : undefined,
+              totalAmount,
+              paymentMode: data.paymentMode,
+              amountPaid: data.amountPaid,
+              balanceDue,
+              transactionId: data.transactionId ? data.transactionId : null,
+              status: 'ACTIVE',
+              items: {
+                create: data.items.map((item) => ({
+                  plant: { connect: { id: item.plantId } },
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  totalPrice: Math.round(item.quantity * item.unitPrice * 100) / 100,
+                  status: 'ACTIVE',
+                })),
               },
             },
-          },
-        });
-
-        // 6b. Decrement plant live inventory stock counts and active batches (FIFO)
-        for (const item of data.items) {
-          const activeBatches = await tx.inventoryBatch.findMany({
-            where: {
-              plantId: item.plantId,
-              status: { not: 'ARCHIVED' },
-              currentQty: { gt: 0 },
+            include: {
+              customer: true,
+              items: {
+                include: {
+                  plant: true,
+                },
+              },
             },
-            orderBy: { purchaseDate: 'asc' },
           });
 
-          if (activeBatches.length > 0) {
-            let remainingToDeduct = item.quantity;
-            for (const batch of activeBatches) {
-              if (remainingToDeduct <= 0) break;
-              const deduct = Math.min(batch.currentQty, remainingToDeduct);
-              await tx.inventoryBatch.update({
-                where: { id: batch.id },
-                data: { currentQty: batch.currentQty - deduct },
-              });
-              remainingToDeduct -= deduct;
-            }
-
-            // Recalculate plant stock count from batch sum
-            const stockAggregate = await tx.inventoryBatch.aggregate({
+          // 6b. Decrement plant live inventory stock counts and active batches (FIFO)
+          for (const item of data.items) {
+            const activeBatches = await tx.inventoryBatch.findMany({
               where: {
                 plantId: item.plantId,
                 status: { not: 'ARCHIVED' },
+                currentQty: { gt: 0 },
               },
-              _sum: {
-                currentQty: true,
-              },
+              orderBy: { purchaseDate: 'asc' },
             });
-            await tx.plant.update({
-              where: { id: item.plantId },
+
+            if (activeBatches.length > 0) {
+              let remainingToDeduct = item.quantity;
+              for (const batch of activeBatches) {
+                if (remainingToDeduct <= 0) break;
+                const deduct = Math.min(batch.currentQty, remainingToDeduct);
+                await tx.inventoryBatch.update({
+                  where: { id: batch.id },
+                  data: { currentQty: batch.currentQty - deduct },
+                });
+                remainingToDeduct -= deduct;
+              }
+
+              // Recalculate plant stock count from batch sum
+              const stockAggregate = await tx.inventoryBatch.aggregate({
+                where: {
+                  plantId: item.plantId,
+                  status: { not: 'ARCHIVED' },
+                },
+                _sum: {
+                  currentQty: true,
+                },
+              });
+              await tx.plant.update({
+                where: { id: item.plantId },
+                data: {
+                  stockCount: stockAggregate._sum.currentQty ?? 0,
+                },
+              });
+            } else {
+              await tx.plant.update({
+                where: { id: item.plantId },
+                data: {
+                  stockCount: {
+                    decrement: item.quantity,
+                  },
+                },
+              });
+            }
+          }
+
+          // 6c. If unpaid balance due exists and customer is linked, update customer Udhar ledger
+          if (balanceDue > 0 && finalCustomerId) {
+            await tx.customer.update({
+              where: { id: finalCustomerId },
               data: {
-                stockCount: stockAggregate._sum.currentQty ?? 0,
-              },
-            });
-          } else {
-            await tx.plant.update({
-              where: { id: item.plantId },
-              data: {
-                stockCount: {
-                  decrement: item.quantity,
+                totalUdharDue: {
+                  increment: balanceDue,
                 },
               },
             });
           }
-        }
 
-        // 6c. If unpaid balance due exists and customer is linked, update customer Udhar ledger
-        if (balanceDue > 0 && finalCustomerId) {
-          await tx.customer.update({
-            where: { id: finalCustomerId },
-            data: {
-              totalUdharDue: {
-                increment: balanceDue,
-              },
-            },
-          });
+          return newBill;
+        },
+        {
+          maxWait: 10000,
+          timeout: 25000,
         }
-
-        return newBill;
-      });
+      );
 
       // 7. Revalidate cache paths
       revalidatePath(APP_ROUTES.POS);
@@ -522,7 +548,12 @@ export async function createPosBillAction(
         data: createdBill,
       };
     } catch (error: any) {
-      console.error(`[POS_CHECKOUT_ERROR] (Attempt ${attempt}/3):`, error);
+      console.error(`[POS_CHECKOUT_FAILURE] (Attempt ${attempt}/3):`, {
+        message: error?.message,
+        code: error?.code,
+        meta: error?.meta,
+        stack: error?.stack,
+      });
 
       // If unique constraint collision on billNumber occurred, retry with a fresh number
       if (error?.code === 'P2002' && attempt < 3) {
@@ -531,20 +562,31 @@ export async function createPosBillAction(
         continue;
       }
 
-      const detail = error?.message || (error?.code ? `Code: ${error.code}` : String(error));
-      const isDev = process.env.NODE_ENV !== 'production';
+      // Build real error description that is NEVER swallowed into a generic message
+      let realReason = '';
+      if (error?.code) {
+        realReason += `[${error.code}] `;
+      }
+      if (error?.message) {
+        const cleaned = error.message.replace(/\s+/g, ' ').trim();
+        realReason += cleaned;
+      } else {
+        realReason += String(error);
+      }
+
+      if (error?.meta && Object.keys(error.meta).length > 0) {
+        realReason += ` (meta: ${JSON.stringify(error.meta)})`;
+      }
 
       return {
         success: false,
-        error: isDev || detail.includes('P2002') || detail.includes('Plant') || detail.includes('customer')
-          ? `Failed to complete POS checkout transaction: ${detail}`
-          : 'Failed to complete POS checkout transaction. Please try again.',
+        error: `Failed to complete POS checkout: ${realReason}`,
       };
     }
   }
 
   return {
     success: false,
-    error: 'Failed to complete POS checkout transaction after multiple retries. Please try again.',
+    error: 'Failed to complete POS checkout: Maximum retry attempts exceeded for invoice number generation.',
   };
 }

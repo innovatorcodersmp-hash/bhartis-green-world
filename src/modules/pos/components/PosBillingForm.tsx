@@ -398,6 +398,12 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
       return;
     }
 
+    const hasInvalidItem = items.some((it) => !it.plantId || it.plantId.trim() === '');
+    if (hasInvalidItem) {
+      setErrorMessage('Please select a valid plant cultivar for all items in the list.');
+      return;
+    }
+
     if (!selectedCustomer && walkInPhone.trim() && walkInPhone.trim().length < 10) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -406,17 +412,19 @@ export const PosBillingForm: React.FC<PosBillingFormProps> = ({
       return;
     }
 
-    // Require registered customer or verified mobile number for Credit / Udhar
-    if (paymentMode === 'CREDIT_UDHAR') {
+    // Require registered customer or verified mobile number for Credit / Udhar or any unpaid balance
+    if (paymentMode === 'CREDIT_UDHAR' || balanceDue > 0) {
       const hasCustomer = Boolean(customerId);
       const hasValidPhone = Boolean(walkInPhone.trim() && walkInPhone.trim().length >= 10);
 
       if (!hasCustomer && !hasValidPhone) {
         setErrorMessage(
-          'Udhar (Credit) sales require selecting a registered customer account or entering a 10-digit mobile number.'
+          balanceDue > 0
+            ? `An unpaid balance of ₹${balanceDue.toFixed(2)} requires selecting a customer or entering a 10-digit mobile number to record the Udhar ledger.`
+            : 'Udhar (Credit) sales require selecting a registered customer account or entering a 10-digit mobile number.'
         );
         setFieldErrors({
-          customerId: ['Please select a customer or enter mobile number for credit sales.'],
+          customerId: ['Please select a customer or enter mobile number for credit balance.'],
         });
         return;
       }
